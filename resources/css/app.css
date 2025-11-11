@@ -1,0 +1,49 @@
+
+@import 'tailwindcss';
+
+
+@custom-variant dark (&:where(.dark, .dark *));
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer components {
+  /* Default button style */
+  .btn {
+    @apply px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600;
+  }
+
+  /* Default card style */
+  .card {
+    @apply p-4 bg-white shadow rounded-lg;
+  }
+
+  /* Default heading */
+  .heading {
+    @apply text-2xl font-bold ;
+  }
+}
+@layer base {
+  /* Set default font size and line height for the whole site */
+  body {
+    @apply text-base leading-relaxed font-sans;
+  }
+
+  h1 {
+    @apply text-3xl font-bold;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold;
+  }
+
+  p {
+    @apply text-base text-gray-700;
+  }
+}
