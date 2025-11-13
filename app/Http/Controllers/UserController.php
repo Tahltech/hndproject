@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Branch;
 use Illuminate\Http\Request;
 use App\Models\Methode\Middleware;
+use App\Models\Zone;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -210,24 +211,33 @@ class UserController extends Controller
         $request->validate([
             'full_name' => 'required|string|max:100',
             'email' => 'required|email|unique:users,email',
+            'username'=>'string|max:100',
             'phone_number' => 'required|unique:users,phone_number',
-            'branch_id' => 'required|exists:branches,branch_id',
-            'role_id' => 'required|exists:roles,role_id',
-            'password' => 'required|min:6|confirmed',
+            'role' => 'required|exists:roles,role_name',
+            'password' => 'required',
         ]);
 
-        User::create([
+        $staff = Auth::user();
+        $roleId = Role::where("name",$request->role)->first();
+
+        //dd($roleId);
+
+      $staffs =  User::create([
             'full_name' => $request->full_name,
-            'username' => strtolower(str_replace(' ', '_', $request->full_name)),
+            'username' => $request->username,
             'email' => $request->email,
             'phone_number' => $request->phone_number,
-            'branch_id' => $request->branch_id,
-            'role_id' => $request->role_id,
+            'branch_id' => $staff->branch_id,
+            'bank_id'=>$staff->bank_id,
+            'role_id' => $roleId->id,
             'password' => Hash::make($request->password),
             'status' => 'active',
         ]);
+        //dd($oops);
+          $staffs->assignRole($request->role);
+        
 
-        return redirect()->back()->with('success', 'Staff account created successfully!');
+        return redirect()->route("branchadmindashboard")->with('success', 'Staff account created successfully!');
     }
 
     // Approve pending user (Support Officer or Branch Admin)
@@ -250,10 +260,30 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'User registration rejected.');
     }
 
+    /**
+     * create
+     */
+
     // List all users for branch dashboard
     public function index()
     {
         $users = User::where('branch_id', Auth::user()->branch_id)->get();
         return view('users.index', compact('users'));
+    }
+    
+    public function zonesave(Request $request){
+        $request->validate([
+            "zoneName"=>'required|min:5',
+        ]);
+
+        $branchId = Auth::user()->branch_id;
+
+        Zone::create([
+            'branch_id'=>$branchId,
+            'name'=>$request->zoneName,
+        ]);
+
+        return redirect()->route("branchadmindashboard")->with("success", "zone created succesfully");
+
     }
 }

@@ -62,7 +62,7 @@ class BallanceController extends Controller
             return redirect()->route("addballance")->with('error', "Amount can't be less than 50 XAF");
         }
         $account = Account::where('user_id', $userId)->first();
-
+       
         if ($account) {
             // Increment existing balance
             $account->balance += $amount;
@@ -74,12 +74,15 @@ class BallanceController extends Controller
                 'amount' => $amount,
             ]);
         }
+         $acountId= $account->account_id;
 
 
+
+       // dd($acountId);
         //create transaction
 
         Transaction::create([
-            'account_id' => $userId,
+            'account_id' => $acountId,
             'agent_id'    => 1,
             'type' => 'deposit',
             'method' => 'mtn_momo',
@@ -92,6 +95,7 @@ class BallanceController extends Controller
 
         return redirect()->route('userdashboard')->with('success', 'Balance added successfully!');
     }
+
 
 
     public function withdrawballance(Request $request)

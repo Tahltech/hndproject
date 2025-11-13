@@ -8,7 +8,7 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
-
+use App\Http\Controllers\ZoneController;
 
 Route::get('/', function () {
     return Inertia::render('Home');
@@ -72,7 +72,7 @@ Route::post('/branchadmindashboard/create', [UserController::class, 'branchAdmin
 
 
 /**
- * gets information about the branch and what the ranch admin can do 
+ * gets information about the branch and what the branch admin can do 
  */
 //gets the branch admin dashboard for the admins when they log in 
 Route::get('/branchadmindashboard', function () {
@@ -81,6 +81,17 @@ Route::get('/branchadmindashboard', function () {
 Route::get('branchadmin/create', function () {
     return Inertia::render('Admin2/CreateStaff');
 })->name("createstaff");
+Route::get("/branchadmindashboard/role", function(){
+    return inertia("Admin2/CreateRole");
+});
+Route::get("branchadmin/createzone", function(){
+    return Inertia::render('Admin2/CreateZone');
+})->name('createzone');
+
+//use to create zones
+Route::post("branchadmindashboard/createzone",[UserController::class, 'zonesave'])->name("savezone");
+//displaying the available agents 
+Route::get('available/agents',[ZoneController::class, 'agents']);
 /**
  * gets information about the loan officer and what they can do on the site 
  */
@@ -114,7 +125,7 @@ Route::get('/supportadmindashboard', function () {
 //agent dashboard
 
 Route::get('agentadmindashboard', function () {
-    return Inertia::render('Admin1/Admindashboard');
+    return Inertia::render('Agent/Agentdashboard');
 })->name('agentadmindashboard');
 
 /**
@@ -144,5 +155,11 @@ Route::middleware(['auth', 'check_permission:view_dashboard_user'])->group(funct
         return Inertia::render('User/WithdrawBallance');
     })->name('withdraw');
 });
-
+/**
+ * withdrawing from the main ballance
+ */
 Route::post('/withdraw',[BallanceController::class,'withdrawballance'])->name("withdrawballance");
+/**
+ * a branch admin creating the branch's staff
+ */
+Route::post('/branchadmin/createstaff',[UserController::class, 'storeStaff'])->name("branch_staff");

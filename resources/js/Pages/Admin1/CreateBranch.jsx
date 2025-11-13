@@ -30,21 +30,21 @@ export default function CreateBranch() {
                     className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm"
                 >
                     <input
-                        type="name"
+                        type="text"
                         value={data.name}
                         placeholder="Enter Branch Name"
                         onChange={(e) => setData("name", e.target.value)}
                         className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
                     />
                     <input
-                        type="address"
+                        type="text"
                         value={data.address}
                         placeholder="Enter Branch address"
                         onChange={(e) => setData("address", e.target.value)}
                         className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
                     />
                     <input
-                        type="contact_number"
+                        type="number"
                         value={data.contact_number}
                         placeholder="Enter Branch contact_number"
                         onChange={(e) =>
