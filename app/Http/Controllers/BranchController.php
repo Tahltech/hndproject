@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bank;
+use App\Models\User;
 use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
+use function Laravel\Prompts\select;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class BranchController extends Controller
 {
@@ -17,6 +21,16 @@ class BranchController extends Controller
             'branch' => $branch,
         ]);
     }
+   public function availableBranches($id)
+{
+    $branches = Branch::where('bank_id', $id)
+        ->select('branch_id', 'name', 'address')
+        ->get();
+    return Inertia::render('Branches', [
+        'branches' => $branches
+    ]);
+}
+
     /**
      * Display a listing of the resource.
      */
@@ -77,6 +91,30 @@ class BranchController extends Controller
 
 
         return redirect()->route('bnkadmindashboard')->with('success', 'Branch created successfully');
+    }
+
+    public function availableusers(Request $request)
+    {
+
+        if (!$request->ajax() && !$request->wantsJson()) {
+            abort(404);
+        }
+
+        $usersBranchId = Auth::user()->branch_id;
+        $users = DB::table('users')
+            ->join('roles', 'roles.role_id', '=', 'users.role_id')
+            ->where('users.branch_id', $usersBranchId)
+            ->where('roles.role_name', 'user')
+            ->select('users.*')
+            ->get();
+
+
+        //dd($users);
+
+        return response()->json([
+            'users' => $users,
+
+        ]);
     }
 
     /**

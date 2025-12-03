@@ -24,6 +24,14 @@ class BankController extends Controller
             'banks' => $banks
         ]);
     }
+    public function availableBanks(){
+        //using the banks model to get the available banks under this project 
+      $banks =  Bank::all();
+
+      return Inertia::render("Home", [
+        "banks"=> $banks,
+      ]);
+    }
 
     public function createAdmin(Request $request,$id)
     {

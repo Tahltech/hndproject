@@ -13,7 +13,12 @@ class Loan extends Model
 
     protected $primaryKey = 'loan_id';
 
-    protected $fillable = ['account_id', 'principal_amount', 'interest_rate', 'repayment_period', 'status'];
+    protected $fillable = [
+    'account_id', 
+    'principal_amount',
+    'interest_rate',
+    'repayment_period',
+    'status'];
 
     public function account(): BelongsTo
     {

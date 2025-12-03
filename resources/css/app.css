@@ -47,3 +47,18 @@
     @apply text-base text-gray-700;
   }
 }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom animation layer for Tailwind CSS v4 */
+@layer utilities {
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+  }
+
+  .animate-wiggle {
+    animation: wiggle 0.15s ease-in-out;
+  }
+}

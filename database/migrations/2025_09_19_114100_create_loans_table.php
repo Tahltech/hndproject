@@ -15,8 +15,8 @@ return new class extends Migration
             $table->bigIncrements('loan_id');
             $table->unsignedBigInteger('account_id');
             $table->decimal('principal_amount', 12, 2);
-            $table->decimal('interest-rate', 5, 2);
-            $table->integer('repayment_period'); // months
+            $table->decimal('interest_rate', 5, 2);
+            $table->string('repayment_period'); // months
             $table->enum('status', ['pending', 'approved', 'rejected', 'active', 'completed'])->default('pending');
             $table->foreign('account_id')->references('account_id')->on('accounts')->onDelete('cascade');
             $table->timestamps();

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AgentController;
 use App\Http\Controllers\BallanceController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -8,11 +9,11 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LoanController;
 use App\Http\Controllers\ZoneController;
 
-Route::get('/', function () {
-    return Inertia::render('Home');
-})->name('home');
+Route::get('/', [BankController::class, "availableBanks"])->name('home');
+Route::get('/branches/{id}',[BranchController::class, "availableBranches"])->name("branches");
 Route::get("/login", function () {
     return Inertia::render('Login');
 })->name('login');
@@ -90,16 +91,27 @@ Route::get("branchadmin/createzone", function(){
 
 //use to create zones
 Route::post("branchadmindashboard/createzone",[UserController::class, 'zonesave'])->name("savezone");
-//displaying the available agents 
+//displaying the available agents and Zones
 Route::get('available/agents',[ZoneController::class, 'agents']);
+Route::get('available/zones', [ZoneController::class, 'Zones']);
+Route::post('assign/zones', [ZoneController::class, 'assignZones'])->name("assignAgents");
 /**
  * gets information about the loan officer and what they can do on the site 
  */
-//loan officer dashboard
-Route::get('/loanadmindashboard', function () {
-    return Inertia::render('Admin1/Admindashboard');
-})->name('loanadmindashboard');
+//loan officer dashb
+Route::get('/loanadmindashboard', [LoanController::class, 'getLoans'])
+    ->name('loanadmindashboard');
 
+/**
+ * this route gets sthe page displaying information or a list of all users of a particular branch 
+ */
+Route::get('/available/branchusers',[BranchController::class, 'availableusers']);
+Route::get('allbranch/users', function(){
+    return Inertia::render('Admin2/AvailableUsers');
+})->name('availableusers');
+Route::get('/agent/clients',[AgentController::class, 'agentclients']);
+Route::post('/assign/userzone',[AgentController::class, 'alterusers'])->name("alterZone");
+Route::post("/remove/userszone", [AgentController::class, 'removeuserzone'])->name("removeZone");
 /**
  * gets the accountant dashboard and what they can do 
  */
@@ -163,3 +175,8 @@ Route::post('/withdraw',[BallanceController::class,'withdrawballance'])->name("w
  * a branch admin creating the branch's staff
  */
 Route::post('/branchadmin/createstaff',[UserController::class, 'storeStaff'])->name("branch_staff");
+
+//getting loans page 
+Route::middleware('auth')->prefix('dashboard')->group(function () {
+    Route::resource('loan', LoanController::class);
+});

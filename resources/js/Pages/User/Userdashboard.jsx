@@ -106,15 +106,23 @@ export default function Userdashboard() {
                     {flash.success}
                 </div>
             )}
+            <div className="flex items-center gap-6">
+                <form onSubmit={submit}>
+                    <button
+                        type="submit"
+                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                    >
+                        Logout
+                    </button>
+                </form>
 
-            <form onSubmit={submit}>
-                <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                <Link
+                    href={route("loan.index")}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                 >
-                    Logout
-                </button>
-            </form>
+                    Loan
+                </Link>
+            </div>
         </main>
     );
 }

@@ -118,7 +118,7 @@ class UserController extends Controller
             'branch_id' => $request->branch_id,
             'role_id' =>  $legacyRole->id,
             'password' => Hash::make($request->password),
-            'status' => 'pending',
+            'status' => 'active',
         ]);
 
         $user->assignRole($roleName);

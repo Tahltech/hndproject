@@ -42,6 +42,8 @@ class BallanceController extends Controller
             'amount' => 'required|numeric',
         ]);
 
+        //CAMPAY 
+
         if ($ballance['method'] === 'Mobile Money') {
 
 
@@ -83,7 +85,7 @@ class BallanceController extends Controller
 
         Transaction::create([
             'account_id' => $acountId,
-            'agent_id'    => 1,
+            'agent_id'    => $userId,
             'type' => 'deposit',
             'method' => 'mtn_momo',
             'amount' => $amount,

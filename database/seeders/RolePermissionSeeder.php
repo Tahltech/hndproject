@@ -4,13 +4,21 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Role; // your custom roles model
 use Spatie\Permission\Models\Role as SpatieRole;
 
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
+        // Disable foreign key checks
+    DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+    // Truncate the table
+    DB::table('roles')->truncate();
+
+    // Re-enable foreign key checks
+    DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $roles = [
             'user',
             'agent',
