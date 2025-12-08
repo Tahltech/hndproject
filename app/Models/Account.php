@@ -30,5 +30,7 @@ class Account extends Model
     {
         return $this->hasMany(Loan::class, 'account_id', 'account_id');
     }
+
+    
 }
 

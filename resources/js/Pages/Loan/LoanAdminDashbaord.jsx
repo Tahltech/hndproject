@@ -1,12 +1,108 @@
+import { route } from "ziggy-js";
 import Layout from "../Layout/Layout";
-import { Link } from "@inertiajs/react";
+import { Link, useForm,router} from "@inertiajs/react";
+import { useState, useMemo } from "react";
+import AllertMessage from "../../Components/AlertMessage";
 
 export default function LoanDashboard({ loanRequests }) {
+    const { put } = useForm();
+    const [search, setSearch] = useState("");
+
+    // filter loans based on search query
+    const filteredLoans = useMemo(() => {
+        if (!search) return loanRequests;
+
+        return loanRequests.filter((loan) => {
+            const fullName = loan.account?.user?.full_name?.toLowerCase() || "";
+            const email = loan.account?.user?.email?.toLowerCase() || "";
+            return (
+                fullName.includes(search.toLowerCase()) ||
+                email.includes(search.toLowerCase())
+            );
+        });
+    }, [search, loanRequests]);
+
+     const submit = (e) => {
+        e.preventDefault();
+        router.post("/logout");
+    };
+
     return (
         <main>
             <h2>Welcome Loan Admin</h2>
+            <AllertMessage />
 
-            <div>
+            <div className="bg-white shadow-md rounded-lg p-6 mt-5 mb-12">
+                <h3 className="text-lg font-semibold mb-4">
+                    Loan Demanded This Week
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 ">
+                    {/* Total Loan Amount */}
+                    <div className="bg-blue-100 text-blue-800 rounded-lg p-4 flex flex-col items-center justify-center">
+                        <span className="text-sm">Total Loan Amount</span>
+                        <span className="text-2xl font-bold">
+                            XAF{" "}
+                            {loanRequests.reduce(
+                                (sum, loan) =>
+                                    sum + Number(loan.principal_amount || 0),
+                                0
+                            )}
+                        </span>
+                    </div>
+
+                    {/* Pending Loans */}
+                    <div className="bg-yellow-100 text-yellow-800 rounded-lg p-4 flex flex-col items-center justify-center">
+                        <span className="text-sm">Pending Loans</span>
+                        <span className="text-2xl font-bold">
+                            {
+                                loanRequests.filter(
+                                    (loan) => loan.status === "pending"
+                                ).length
+                            }
+                        </span>
+                    </div>
+
+                    {/* Approved Loans */}
+                    <div className="bg-green-100 text-green-800 rounded-lg p-4 flex flex-col items-center justify-center">
+                        <span className="text-sm">Approved Loans</span>
+                        <span className="text-2xl font-bold">
+                            {
+                                loanRequests.filter(
+                                    (loan) => loan.status === "approved"
+                                ).length
+                            }
+                        </span>
+                    </div>
+                </div>
+
+                <div className="bg-green-100 text-green-800 rounded-lg p-4 flex flex-col items-center justify-center">
+                    <span className="text-sm">Total Loan Amount Approved</span>
+                    <span className="text-2xl font-bold">
+                        XAF{" "}
+                        {loanRequests
+                            .filter((loan) => loan.status === "approved")
+                            .reduce(
+                                (sum, loan) =>
+                                    sum + Number(loan.principal_amount || 0),
+                                0
+                            )}
+                    </span>
+                </div>
+            </div>
+
+            {/* Search input */}
+            <div className="mb-4">
+                <input
+                    type="text"
+                    placeholder="Search by name or email..."
+                    className="border border-gray-300 rounded px-3 py-2 w-full md:w-1/3"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+            </div>
+
+            <div className="mt-4">
                 <h3>Loan Requests</h3>
 
                 <table className="min-w-full border border-gray-300 rounded-lg overflow-hidden shadow-md mt-2">
@@ -33,8 +129,8 @@ export default function LoanDashboard({ loanRequests }) {
                     </thead>
 
                     <tbody>
-                        {loanRequests && loanRequests.length > 0 ? (
-                            loanRequests.map((loan) => (
+                        {filteredLoans.length > 0 ? (
+                            filteredLoans.map((loan) => (
                                 <tr
                                     key={loan.loan_id ?? loan.id}
                                     className="border-b hover:bg-gray-100 transition"
@@ -42,7 +138,6 @@ export default function LoanDashboard({ loanRequests }) {
                                     <td className="py-2 px-4">
                                         {loan.account?.user?.full_name ?? "N/A"}
                                     </td>
-
                                     <td className="py-2 px-4">
                                         <div>
                                             {loan.account?.user?.phone_number}
@@ -51,19 +146,16 @@ export default function LoanDashboard({ loanRequests }) {
                                             {loan.account?.user?.email}
                                         </div>
                                     </td>
-
                                     <td className="py-2 px-4 font-semibold">
                                         {loan.principal_amount
                                             ? `XAF ${loan.principal_amount}`
                                             : "N/A"}
                                     </td>
-
                                     <td className="py-2 px-4">
                                         {loan.loan_purpose
                                             ? `${loan.loan_purpose}`
                                             : "Normal Loan"}
                                     </td>
-
                                     <td className="py-2 px-4">
                                         {loan.created_at
                                             ? new Date(
@@ -71,7 +163,6 @@ export default function LoanDashboard({ loanRequests }) {
                                               ).toLocaleDateString()
                                             : "N/A"}
                                     </td>
-
                                     <td className="py-2 px-4">
                                         {loan.repayment_period &&
                                         loan.created_at
@@ -89,11 +180,9 @@ export default function LoanDashboard({ loanRequests }) {
                                               ).toLocaleDateString()
                                             : "N/A"}
                                     </td>
-
                                     <td className="py-2 px-4">
                                         {loan.repayment_period} months
                                     </td>
-
                                     <td className="py-2 px-4">
                                         <span
                                             className={`px-2 py-1 rounded text-sm ${
@@ -107,11 +196,16 @@ export default function LoanDashboard({ loanRequests }) {
                                             {loan.status}
                                         </span>
                                     </td>
-
                                     <td className="py-2 px-4">
-                                        <button className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition">
-                                            View
-                                        </button>
+                                        <Link
+                                            href={route(
+                                                "loan.show",
+                                                loan.loan_id
+                                            )}
+                                            className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
+                                        >
+                                            Show
+                                        </Link>
                                     </td>
                                 </tr>
                             ))
@@ -137,6 +231,15 @@ export default function LoanDashboard({ loanRequests }) {
                     Available Users
                 </Link>
             </div>
+
+             <form onSubmit={submit}>
+                    <button
+                        type="submit"
+                        className="bg-green-600 text-white px-4 py-2 mt-4 rounded hover:bg-green-700"
+                    >
+                        Logout
+                    </button>
+                </form>
         </main>
     );
 }
