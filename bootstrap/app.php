@@ -5,6 +5,7 @@ use App\Http\Middleware\CheckPermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Http\Middleware\AjaxOnly;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         
         $middleware->alias([
             'check_permission' => CheckPermission::class,
+             'ajax.only' => AjaxOnly::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -1,11 +1,13 @@
 import React from "react";
 import { Link } from "@inertiajs/react";
 import logo from "../assets/Tahlfin.png";
+import Toast from "../../Components/Toast";
 
 export default function Layout({ children }) {
     return (
         <div className="flex flex-col min-h-screen bg-gray-50 text-gray-800">
             {/* Header */}
+            <Toast />
          <header className="fixed top-0 left-0 w-full bg-gradient-to-r from-blue-900 to-blue-700 text-white shadow-md z-[1000]">
                
                 <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">

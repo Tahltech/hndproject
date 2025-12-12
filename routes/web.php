@@ -195,20 +195,12 @@ Route::middleware(['auth', 'check_permission:view_dashboard_user'])
         Route::get('/', fn() => Inertia::render('User/Userdashboard'))
             ->name('userdashboard');
 
-        Route::get('account/ballance', [BallanceController::class, 'Ballance'])
-            ->name('ballance');
-
-        Route::get('/addballance', fn() => Inertia::render('User/AddBallance'))
-            ->name('addballance');
+        Route::get('account/ballance', [BallanceController::class, 'getBalance'])
+            ->middleware('ajax.only');
 
         Route::post('/addballance', [BallanceController::class, 'addballance'])
             ->name("newballance");
 
-        Route::get('/withdraw', fn() => Inertia::render('User/WithdrawBallance'))
-            ->name('withdraw');
-
-        Route::post('/withdraw', [BallanceController::class, 'withdrawballance'])
-            ->name("withdrawballance");
     });
 
 

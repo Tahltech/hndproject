@@ -2,11 +2,14 @@ import Layout from "./Layout/Layout";
 import { Link, Head } from "@inertiajs/react";
 import React from "react";
 import { route } from "ziggy-js";
+import AlertMessage from "../Components/AlertMessage";
 
 export default function Home({ banks }) {
     return (
         <main>
             <Head title="Home" />
+
+            <AlertMessage />
 
             <h1>hello welcome to our site </h1>
             <p>Login or create account to continue</p>
