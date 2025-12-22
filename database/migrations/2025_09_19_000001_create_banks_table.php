@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->string('contact_number', 20)->nullable();
             $table->string('email', 100)->unique();
+           $table->enum('status', ['active', 'pending', 'rejected'])->default('pending');
             $table->timestamps();
         });
     }

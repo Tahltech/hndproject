@@ -19,6 +19,7 @@ class Bank extends Model
         'address',
         'contact_number',
         'email',
+        'status',
     ];
 
     public function branches(): HasMany

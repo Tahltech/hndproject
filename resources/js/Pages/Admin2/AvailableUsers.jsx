@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Layout from "../Layout/Layout";
+//import Layout from "../Layout/Layout";
 
 export default function AvailableUsers() {
     const [Users, setUsers] = useState([]);
@@ -72,4 +72,4 @@ export default function AvailableUsers() {
     );
 }
 
-AvailableUsers.layout = (page) => <Layout>{page}</Layout>;
+//AvailableUsers.layout = (page) => <Layout>{page}</Layout>;

@@ -6,7 +6,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
 // Optional: import a default layout if you want for some pages
-import Layout from './Pages/Layout/Layout';
+import PublicLayout  from './Pages/Layout/PublicLayout';
 
 createInertiaApp({
   title: title => title ? `${title} - TahlFIN` : 'TahlFIN',

@@ -1,10 +1,11 @@
 import React from "react";
 import { usePage, Link, useForm, Head } from "@inertiajs/react";
-//import Layout from "@/Pages/Layout/Layout";
 import { route } from "ziggy-js";
+import Icon from "@/Components/Icons";
+import AuthLayout from "./Layout/AuthLayout";
 
 export default function Login() {
-    const { props } = usePage(); // Access props (errors, flash, etc.)
+    const { props } = usePage();
     const { errors } = props;
 
     const { data, post, setData, processing } = useForm({
@@ -14,82 +15,117 @@ export default function Login() {
 
     const submit = (e) => {
         e.preventDefault();
-        // Send the form data explicitly
         post(route("submitlogin"), data);
     };
 
+    const inputClass = (error) => `
+        w-full pl-10 pr-3 py-2.5 rounded-lg border
+        ${
+            error
+                ? "border-red-500 focus:ring-red-500"
+                : "border-[var(--color-border)] focus:ring-[var(--color-primary-light)]"
+        }
+        focus:outline-none focus:ring-2
+    `;
+
+    const iconClass = (error) => `
+        absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4
+        ${error ? "text-red-500" : "text-[var(--color-text-muted)]"}
+    `;
+
     return (
-        <main className="flex justify-center items-center min-h-screen bg-gray-100">
+        <main className="min-h-screen flex items-center justify-center px-4">
             <Head title="Login" />
 
             <form
+                className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-lg p-8"
                 onSubmit={submit}
-                className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm"
             >
-                <h2 className="text-2xl font-bold text-center mb-6 text-gray-700">
-                    Login to Your Account
-                </h2>
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h2 className="text-2xl font-extrabold text-[var(--color-text-primary)]">
+                        Welcome Back
+                    </h2>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                        Login to continue to TahlFIN
+                    </p>
+                </div>
 
                 {/* Email */}
-                <div className="mb-4">
-                    <input
-                        type="email"
-                        value={data.email}
-                        onChange={(e) => setData("email", e.target.value)}
-                        placeholder="Enter your email"
-                        className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
-                    />
+                <div className="mb-5">
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Email Address
+                    </label>
+                    <div className="relative">
+                        <Icon
+                            name="users"
+                            className={iconClass(errors.email)}
+                        />
+                        <input
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData("email", e.target.value)}
+                            placeholder="you@example.com"
+                            className={inputClass(errors.email)}
+                        />
+                    </div>
                 </div>
 
                 {/* Password */}
                 <div className="mb-6">
-                    <input
-                        type="password"
-                        value={data.password}
-                        onChange={(e) => setData("password", e.target.value)}
-                        placeholder="Enter your password"
-                        className={`w-full p-2 border-b-2 ${
-                            errors.password
-                                ? "border-red-500"
-                                : "border-gray-300"
-                        } focus:outline-none focus:border-blue-500`}
-                    />
-                    {errors.password && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.password}
-                        </p>
-                    )}
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Password
+                    </label>
+                    <div className="relative">
+                        <Icon
+                            name="security"
+                            className={iconClass(errors.password)}
+                        />
+                        <input
+                            type="password"
+                            value={data.password}
+                            onChange={(e) =>
+                                setData("password", e.target.value)
+                            }
+                            placeholder="••••••••"
+                            className={inputClass(errors.password)}
+                        />
+                    </div>
                 </div>
 
-                {/* Submit Button */}
+                {/* Submit */}
                 <button
                     type="submit"
                     disabled={processing}
-                    className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-60"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white shadow hover:opacity-90 transition disabled:opacity-60"
                 >
+                    <Icon name="dashboard" className="w-4 h-4" />
                     {processing ? "Logging in..." : "Login"}
                 </button>
 
-                {/* Signup Link */}
-                <p className="text-center text-sm text-gray-600 mt-4">
-                    Don't have an account?{" "}
+                {/* Footer */}
+                <p className="text-center text-sm text-[var(--color-text-muted)] mt-6">
+                    Don’t have an account?{" "}
                     <Link
                         href={route("signup")}
-                        className="text-blue-600 hover:underline"
+                        className="font-semibold text-[var(--color-primary)] hover:underline"
                     >
-                        Sign Up
+                        Create one
                     </Link>
                 </p>
 
-                {/* Global Error (like invalid credentials) */}
-                {errors.email && !errors.password && (
-                    <p className="text-red-500 text-center text-sm mt-4">
-                        {errors.email}
-                    </p>
-                )}
+                <p className="text-center text-sm text-[var(--color-text-muted)] mt-6">
+                    {" "}
+                    <Link
+                        href={route("signup")}
+                        className="font-semibold text-[var(--color-primary)] hover:underline"
+                    >
+                        Forgot Password?
+                    </Link>
+                </p>
             </form>
         </main>
     );
 }
 
-//Login.layout = (page) => <Layout>{page}</Layout>;
+Login.layout = (page) => <AuthLayout>{page}</AuthLayout>;

@@ -57,7 +57,7 @@ class UserController extends Controller
                 case 'user':
                     return redirect()->route('userdashboard');
                 case 'it_admin':
-                    return redirect()->route('admindashboard');
+                   return redirect()->route('itadmin.admindashboard');
                 case 'overall_admin':
                     return redirect()->route('bnkadmindashboard');
                 case 'branch_manager':

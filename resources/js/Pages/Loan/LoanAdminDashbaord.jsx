@@ -1,5 +1,5 @@
 import { route } from "ziggy-js";
-import Layout from "../Layout/Layout";
+//import Layout from "../Layout/Layout";
 import { Link, useForm,router} from "@inertiajs/react";
 import { useState, useMemo } from "react";
 import AllertMessage from "../../Components/AlertMessage";
@@ -244,4 +244,4 @@ export default function LoanDashboard({ loanRequests }) {
     );
 }
 
-LoanDashboard.layout = (page) => <Layout>{page}</Layout>;
+//LoanDashboard.layout = (page) => <Layout>{page}</Layout>;

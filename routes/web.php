@@ -11,8 +11,10 @@ use App\Http\Controllers\{
     BranchController,
     DashboardController,
     LoanController,
-    ZoneController
+    ZoneController,
+    SettingsController,
 };
+use App\Http\Controllers\BankProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +34,13 @@ Route::post('/login', [UserController::class, 'login'])->name('submitlogin');
 Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 
 
+Route::middleware('auth')->group(function () {
+    Route::get('/settings', [SettingsController::class, 'index'])->name("settings");
+    Route::post('/settings/updateprofile', [SettingsController::class, 'updateProfile'])->name("updateprofile");
+    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->name("updatepassword");
+    Route::post('/settings/preferences', [SettingsController::class, 'updatePreferences'])->name("updatepreferences");
+});
+
 /*
 |--------------------------------------------------------------------------
 | IT ADMIN ROUTES
@@ -39,6 +48,7 @@ Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 */
 Route::middleware(['auth', 'check_permission:view_dashboard_it_admin'])
     ->prefix('Itadmindashboard')
+    ->name('itadmin.')
     ->group(function () {
 
         Route::get('/', fn() => Inertia::render('Admin/Admindashboard'))
@@ -57,24 +67,54 @@ Route::middleware(['auth', 'check_permission:view_dashboard_it_admin'])
 
         Route::post('/bankadmin', [UserController::class, 'bankAdmin'])
             ->name('bank.admin');
-    });
+        Route::get("alladmins", [BankController::class, 'Alladmins'])->name('allbankadmins');
+        Route::patch('/bankadmins/{user}/status', [BankController::class, 'toggleStatus'])
+            ->name('bankadmin.status');
 
+        Route::delete('/bankadmins/{user}', [BankController::class, 'destroy'])
+            ->name('bankadmin.delete');
+    });
 
 /*
 |--------------------------------------------------------------------------
 | BANK ADMIN ROUTES
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->prefix('/bnkadmindashboard')->group(function () {
+Route::middleware(['auth'])->prefix('bnkadmindashboard')->group(function () {
 
-    Route::get('/', fn() => Inertia::render('Admin1/Admindashboard'))
+    Route::get('/', [BranchController::class, 'dashboard'])
         ->name('bnkadmindashboard');
+
+    Route::get('/branches', [BranchController::class, 'index'])
+        ->name('bnkadmindashboard');
+
+
+    Route::get('/allbranchadmins', [BranchController::class, 'alladmins'])
+        ->name('allbranchadmin');
 
     Route::get('/create', fn() => Inertia::render('Admin1/CreateBranch'))
         ->name('createbranch');
 
     Route::post('/create', [BranchController::class, 'store'])
         ->name('storebranch');
+
+    Route::get('/branch/{branch}/admin', [BranchController::class, 'branchAdmin'])
+        ->name('createbranchadmin');
+
+    Route::patch('/branch/{branch}/update', [BranchController::class, 'update'])
+        ->name('updatebranch');
+
+    Route::delete('/branch/{branch}/delete', [BranchController::class, 'destroy'])
+        ->name('deletebranch');
+    Route::patch('/branch/{user}/status', [BankController::class, 'toggleStatus'])
+        ->name('togglestatusbranchadmin');
+         Route::get('/profile', [BankProfileController::class, 'show'])->name('bank.profile');
+
+    Route::patch('/profile/general', [BankProfileController::class, 'updateGeneral']);
+    Route::patch('/profile/branding', [BankProfileController::class, 'updateBranding']);
+    Route::patch('/profile/contact', [BankProfileController::class, 'updateContact']);
+    Route::patch('/profile/settings', [BankProfileController::class, 'updateSettings']);
+
 });
 
 
@@ -200,7 +240,6 @@ Route::middleware(['auth', 'check_permission:view_dashboard_user'])
 
         Route::post('/addballance', [BallanceController::class, 'addballance'])
             ->name("newballance");
-
     });
 
 
@@ -228,4 +267,3 @@ Route::middleware('auth')->prefix('dashboard')->group(function () {
     Route::post("loan/status/{id}", [LoanController::class, "changeStatus"])
         ->name("changeStatus");
 });
-

@@ -12,19 +12,18 @@ export default function Toast() {
 
     // Push messages into toast list
     useEffect(() => {
-        let newToasts = [];
+        const newToasts = [];
 
         if (success) {
             newToasts.push({ type: "success", message: success });
         }
 
         if (error) {
-            newToasts.push({ type: "error", message: error });
+            newToasts.push({ type: "danger", message: error });
         }
 
-        // Validation errors
         Object.values(errors).forEach((msg) => {
-            newToasts.push({ type: "error", message: msg });
+            newToasts.push({ type: "danger", message: msg });
         });
 
         if (newToasts.length > 0) {
@@ -37,7 +36,7 @@ export default function Toast() {
         if (toasts.length === 0) return;
 
         const timer = setTimeout(() => {
-            setToasts((prev) => prev.slice(1)); // remove first toast
+            setToasts((prev) => prev.slice(1));
         }, 3000);
 
         return () => clearTimeout(timer);
@@ -46,20 +45,36 @@ export default function Toast() {
     if (toasts.length === 0) return null;
 
     return (
-        <div className="fixed top-5 right-5 z-[9999] space-y-3">
+        <div className="fixed top-5 right-5 z-[9999] space-y-3 w-full max-w-sm">
             {toasts.map((toast, i) => (
                 <div
                     key={i}
                     className={`
-                        max-w-sm px-4 py-3 rounded-lg shadow-lg text-white
+                        relative overflow-hidden
+                        px-4 py-3 rounded-xl shadow-lg
                         transition-all duration-500 ease-in-out
-                        transform bg-opacity-90
-                        ${toast.type === "success" ? "bg-green-600" : "bg-red-600"}
-
                         animate-slide-in
+                        bg-[var(--color-surface)]
+                        border
+                        ${
+                            toast.type === "success"
+                                ? "border-l-4 border-[var(--color-success)]"
+                                : "border-l-4 border-[var(--color-danger)]"
+                        }
                     `}
                 >
-                    {toast.message}
+                    <p
+                        className={`
+                            text-sm font-medium
+                            ${
+                                toast.type === "success"
+                                    ? "text-[var(--color-success)]"
+                                    : "text-[var(--color-danger)]"
+                            }
+                        `}
+                    >
+                        {toast.message}
+                    </p>
                 </div>
             ))}
         </div>

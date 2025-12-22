@@ -27,7 +27,8 @@ class User extends Authenticatable
         'email',
         'role_id',
         'password',
-        'status'
+        'status',
+        'profile_photo',
     ];
     protected $guard_name = 'web';
     // Relationships

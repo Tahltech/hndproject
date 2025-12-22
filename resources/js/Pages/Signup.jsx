@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, useForm, usePage, Head } from "@inertiajs/react";
 import { route } from "ziggy-js";
-//import Layout from "./Layout/Layout";
+import Icon from "@/Components/Icons";
+import AuthLayout from "./Layout/AuthLayout";
 
 export default function Signup() {
     const { props } = usePage();
@@ -21,154 +22,153 @@ export default function Signup() {
         post(route("signup"));
     };
 
+    const inputClass = (error) => `
+        w-full pl-10 pr-3 py-2.5 rounded-lg border
+        ${error ? "border-red-500 focus:ring-red-500" : "border-[var(--color-border)] focus:ring-[var(--color-primary-light)]"}
+        focus:outline-none focus:ring-2
+    `;
+
+    const iconClass = (error) => `
+        absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4
+        ${error ? "text-red-500" : "text-[var(--color-text-muted)]"}
+    `;
+
     return (
-        <main className="flex justify-center items-center min-h-screen bg-gray-100">
+        <main className="min-h-screen flex items-center justify-center bg-[var(--color-background)] px-4">
             <Head title="Register" />
+
             <form
                 onSubmit={submit}
-                className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm mx-2"
+                className="w-full max-w-md bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-lg p-8"
             >
-                <h2 className="text-2xl font-bold text-center mb-6 text-gray-700">
-                    Create an Account
-                </h2>
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h2 className="text-2xl font-extrabold text-[var(--color-text-primary)]">
+                        Create Your Account
+                    </h2>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                        Join TahlFIN and manage your finances smarter
+                    </p>
+                </div>
 
                 {/* Full Name */}
                 <div className="mb-4">
-                    <input
-                        type="text"
-                        value={data.full_name}
-                        onChange={(e) => setData("full_name", e.target.value)}
-                        placeholder="Full Name"
-                        className={`w-full p-2 border-b-2 ${
-                            errors.full_name
-                                ? "border-red-500"
-                                : "border-gray-300"
-                        } focus:outline-none focus:border-blue-500`}
-                    />
-                    {errors.full_name && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.full_name}
-                        </p>
-                    )}
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Full Name
+                    </label>
+                    <div className="relative">
+                        <Icon name="users" className={iconClass(errors.full_name)} />
+                        <input
+                            type="text"
+                            value={data.full_name}
+                            onChange={(e) => setData("full_name", e.target.value)}
+                            placeholder="John Doe"
+                            className={inputClass(errors.full_name)}
+                        />
+                    </div>
                 </div>
 
                 {/* Username */}
                 <div className="mb-4">
-                    <input
-                        type="text"
-                        value={data.username}
-                        onChange={(e) => setData("username", e.target.value)}
-                        placeholder="Username"
-                        className={`w-full p-2 border-b-2 ${
-                            errors.username
-                                ? "border-red-500"
-                                : "border-gray-300"
-                        } focus:outline-none focus:border-blue-500`}
-                    />
-                    {errors.username && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.username}
-                        </p>
-                    )}
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Username
+                    </label>
+                    <div className="relative">
+                        <Icon name="users" className={iconClass(errors.username)} />
+                        <input
+                            type="text"
+                            value={data.username}
+                            onChange={(e) => setData("username", e.target.value)}
+                            placeholder="johndoe"
+                            className={inputClass(errors.username)}
+                        />
+                    </div>
                 </div>
 
                 {/* Email */}
                 <div className="mb-4">
-                    <input
-                        type="email"
-                        value={data.email}
-                        onChange={(e) => setData("email", e.target.value)}
-                        placeholder="Email"
-                        className={`w-full p-2 border-b-2 ${
-                            errors.email ? "border-red-500" : "border-gray-300"
-                        } focus:outline-none focus:border-blue-500`}
-                    />
-                    {errors.email && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.email}
-                        </p>
-                    )}
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Email Address
+                    </label>
+                    <div className="relative">
+                        <Icon name="users" className={iconClass(errors.email)} />
+                        <input
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData("email", e.target.value)}
+                            placeholder="you@example.com"
+                            className={inputClass(errors.email)}
+                        />
+                    </div>
                 </div>
 
                 {/* Phone Number */}
                 <div className="mb-4">
-                    <input
-                        type="number"
-                        value={data.phone_number}
-                        onChange={(e) =>
-                            setData("phone_number", e.target.value)
-                        }
-                        placeholder="Phone Number"
-                        className={`w-full p-2 border-b-2 ${
-                            errors.phone_number
-                                ? "border-red-500"
-                                : "border-gray-300"
-                        } focus:outline-none focus:border-blue-500`}
-                    />
-                    {errors.phone_number && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.phone_number}
-                        </p>
-                    )}
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Phone Number
+                    </label>
+                    <div className="relative">
+                        <Icon name="wallet" className={iconClass(errors.phone_number)} />
+                        <input
+                            type="text"
+                            value={data.phone_number}
+                            onChange={(e) => setData("phone_number", e.target.value)}
+                            placeholder="+237 xxx xxx xxx"
+                            className={inputClass(errors.phone_number)}
+                        />
+                    </div>
                 </div>
 
                 {/* Password */}
                 <div className="mb-4">
-                    <input
-                        type="password"
-                        value={data.password}
-                        onChange={(e) => setData("password", e.target.value)}
-                        placeholder="Password"
-                        className={`w-full p-2 border-b-2 ${
-                            errors.password
-                                ? "border-red-500"
-                                : "border-gray-300"
-                        } focus:outline-none focus:border-blue-500`}
-                    />
-                    {errors.password && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.password}
-                        </p>
-                    )}
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Password
+                    </label>
+                    <div className="relative">
+                        <Icon name="security" className={iconClass(errors.password)} />
+                        <input
+                            type="password"
+                            value={data.password}
+                            onChange={(e) => setData("password", e.target.value)}
+                            placeholder="••••••••"
+                            className={inputClass(errors.password)}
+                        />
+                    </div>
                 </div>
 
                 {/* Confirm Password */}
                 <div className="mb-6">
-                    <input
-                        type="password"
-                        value={data.password_confirmation}
-                        onChange={(e) =>
-                            setData("password_confirmation", e.target.value)
-                        }
-                        placeholder="Confirm Password"
-                        className={`w-full p-2 border-b-2 ${
-                            errors.password_confirmation
-                                ? "border-red-500"
-                                : "border-gray-300"
-                        } focus:outline-none focus:border-blue-500`}
-                    />
-                    {errors.password_confirmation && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.password_confirmation}
-                        </p>
-                    )}
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Confirm Password
+                    </label>
+                    <div className="relative">
+                        <Icon name="security" className={iconClass(errors.password_confirmation)} />
+                        <input
+                            type="password"
+                            value={data.password_confirmation}
+                            onChange={(e) => setData("password_confirmation", e.target.value)}
+                            placeholder="••••••••"
+                            className={inputClass(errors.password_confirmation)}
+                        />
+                    </div>
                 </div>
 
-                {/* Submit Button */}
+                {/* Submit */}
                 <button
                     type="submit"
                     disabled={processing}
-                    className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-60"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white shadow hover:opacity-90 transition disabled:opacity-60"
                 >
+                    <Icon name="users" className="w-4 h-4" />
                     {processing ? "Creating account..." : "Sign Up"}
                 </button>
 
-                {/* Login Link */}
-                <p className="text-center text-sm text-gray-600 mt-4">
+                {/* Login */}
+                <p className="text-center text-sm text-[var(--color-text-muted)] mt-6">
                     Already have an account?{" "}
                     <Link
                         href={route("login")}
-                        className="text-blue-600 hover:underline"
+                        className="font-semibold text-[var(--color-primary)] hover:underline"
                     >
                         Login
                     </Link>
@@ -178,4 +178,4 @@ export default function Signup() {
     );
 }
 
-//Signup.layout = (page) => <Layout>{page}</Layout>;
+Signup.layout = (page) => <AuthLayout>{page}</AuthLayout>;

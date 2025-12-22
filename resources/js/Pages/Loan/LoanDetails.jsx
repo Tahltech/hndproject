@@ -2,7 +2,7 @@ import React from "react";
 import { route } from "ziggy-js";
 import { useForm } from "@inertiajs/react";
 import AlertMessage from "../../Components/AlertMessage";
-import Layout from "../Layout/Layout";
+//import Layout from "../Layout/Layout";
 
 export default function LoanDetails({ loan }) {
     const { data, setData, put, post } = useForm({
@@ -136,4 +136,4 @@ export default function LoanDetails({ loan }) {
     );
 }
 
-LoanDetails.layout = page => <Layout>{page}</Layout>
+//LoanDetails.layout = page => <Layout>{page}</Layout>

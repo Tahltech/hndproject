@@ -19,135 +19,107 @@ class BallanceController extends Controller
      */
     public function getBalance()
     {
-        // Get the logged-in user
+        // get the logged-in user
         $user = Auth::user();
-        // Find the account that belongs to this user
         $account = Account::where('user_id', $user->user_id)->first();
-        // If no account exists, return 0
+        $transactions = Transaction::where('account_id', $account->account_id)->latest()->take(5)->get();
+
+        $latestTransaction = $user->account?->transactions()->latest()->first();
         if (!$account) {
             return response()->json([
                 'balance' => 0,
             ]);
         }
-
-        // Return balance
         return response()->json([
             'ballance' => $account->balance,
+            'transactions' => $transactions,
+            'latestTransaction' => $latestTransaction,
         ]);
     }
 
-
     public function addballance(Request $request, RabbitMaidService $rabbitMaid)
     {
-        $ballance = $request->validate([
-            'method' => 'required|min:1',
+        $data = $request->validate([
+            'method'       => 'required',
             'mobileNumber' => 'required|min:9',
-            'amount' => 'required|numeric',
-            'type' => 'required|max:6',
+            'amount'       => 'required|numeric|min:50',
+            'type'         => 'required|in:credit,debit',
         ]);
 
+        //dd($data['type']);
+
         $userId = Auth::user()->user_id;
-        $amount = $ballance['amount'];
+        $amount = $data['amount'];
 
-        if ($amount < 50) {
-            return redirect()->route("addballance")
-                ->with('error', "Amount can't be less than 50 XAF");
-        }
-
-        // MTN or Orange
-        if ($ballance['method'] === 'MobileMoney') {
+        // Payment method
+        if ($data['method'] === 'MobileMoney') {
             $service = 'mtn';
             $methodSaved = 'mtn_momo';
-        } elseif ($ballance['method'] === 'OrangeMoney') {
+        } elseif ($data['method'] === 'OrangeMoney') {
             $service = 'orange';
             $methodSaved = 'orange_money';
         } else {
             return back()->with('error', 'Invalid payment method');
         }
 
-        
+        // Call API
 
-        // Call RabbitMaid API through the service
-        $response = $rabbitMaid->transact($service, 'credit', $amount);
+        //dd($service, $amount);
+        $response = $rabbitMaid->transact($service, $data['type'], $amount);
 
         if (!$response->successful()) {
-            $error = $response->json()['error'] ?? 'Transaction failed';
-            return back()->with('error', $error);
+            return back()->with('error', 'Transaction failed');
         }
 
-        $data = $response->json();
-        $reference = $data['reference'] ?? 'N/A';
-        // Save balance
-        $account = Account::firstOrCreate(
-            ['user_id' => $userId],
-            ['balance' => 0]
-        );
-        if ($ballance['type'] === "credit") {
+        $reference = $response->json()['reference'] ?? 'N/A';
+        $account = Account::where('user_id', $userId)->first();
 
+        //deposit
+        if ($data['type'] === 'credit') {
+
+            if (!$account) {
+                $account = Account::create([
+                    'user_id' => $userId,
+                    'balance' => 0,
+                ]);
+            }
 
             $account->balance += $amount;
             $account->save();
-        } else {
+
+            $method = 'deposit';
+        }
+
+
+        //WITHDRAW
+        else {
+
+            if (!$account) {
+                return back()->with('error', 'No account found');
+            }
+
             if ($account->balance < $amount) {
-                return redirect()->route("withdraw")->with('error', 'Insufficient ballace add savings to withdraw');
+                return back()->with('error', 'Insufficient balance');
             }
 
-            if ($account) {
-                // Increment existing balance
-                $account->balance -= $amount;
-                $account->save();
-            } else {
-                // Create new account record
-                Account::create([
-                    'user_id' => $userId,
-                    'amount' => $amount,
-                ]);
-            }
+            $account->balance -= $amount;
+            $account->save();
+
+            $method = 'withdrawal';
         }
 
-        try {
-            Transaction::create([
-                'account_id'   => $account->account_id,
-                'agent_id'     => $userId,
-                'type'         => $ballance['type'],
-                'method'       => $methodSaved,
-                'amount'       => $amount,
-                'status'       => 'success',
-                'reference_no' => $reference,
-                'remarks'      => 'Done VIA RabbitMaid API',
-            ]);
+        // Save transaction
+        Transaction::create([
+            'account_id'   => $account->account_id,
+            'agent_id'     => $userId,
+            'type'         => $method,
+            'method'       => $methodSaved,
+            'amount'       => $amount,
+            'status'       => 'success',
+            'reference_no' => $reference,
+            'remarks'      => 'Done VIA RabbitMaid API',
+        ]);
 
-            return redirect()
-                ->route('userdashboard')
-                ->with('success', "Deposit successful! Reference: $reference");
-        } catch (\Throwable $th) {
-
-            Log::error('Deposit transaction failed', [
-                'error' => $th->getMessage(),
-                'trace' => $th->getTraceAsString(),
-            ]);
-
-
-            return back()->with('error', 'Something went wrong while processing the deposit try again later .');
-        }
+        return back()->with('success', ucfirst($method) . " successful! Ref: $reference");
     }
-
-    //     public function testMail(PHPMailerService $mailer)
-    //     {
-    //         $sent = $mailer->sendEmail(
-    //             'recipient@example.com',
-    //             'Test Email',
-    //             '<h1>Hello!</h1><p>This is a test email</p>'
-    //         );
-
-    //         if ($sent) {
-    //             return "Email sent successfully!";
-    //         }
-
-    //         return "Email failed to send.";
-    //     }
-    // }
-    // ✅
-
-
 }

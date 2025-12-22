@@ -1,14 +1,14 @@
-import Layout from "@/Pages/Layout/Layout";
-import { useForm, usePage, Link, Head } from "@inertiajs/react";
+import { useForm, Head, Link } from "@inertiajs/react";
 import { route } from "ziggy-js";
 import React, { useState } from "react";
+import Icon from "@/Components/Icons";
+import AdminLayout from "../Layout/AdminLayout";
 
-export default function CraeteBranchAdmin({ branch}) {
-    const { props } = usePage();
-    const { errors } = props;
+export default function CreateBranchAdmin({ branch }) {
     const [showForm, setShowForm] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
-    const { data, post, setData, processing } = useForm({
+    const { data, setData, post, processing } = useForm({
         full_name: "",
         username: "",
         email: "",
@@ -18,162 +18,231 @@ export default function CraeteBranchAdmin({ branch}) {
         password_confirmation: "",
     });
 
-    const toggleForm = () => {
-        setShowForm(!showForm);
-    };
-
     const submit = (e) => {
         e.preventDefault();
         post(route("storeBranchAdmin"));
     };
+
     return (
-        <main className="flex justify-center items-center min-h-screen bg-gray-100 flex-col">
-            <Head title="Branch" />
-            <h1 className="mb-3 mt-0.5 ">
-                {/* {branch?.name ? `${branch.name} ` : ""} branchs Information */}
-            </h1>
+        <>
+            <Head title={`${branch.name} – Branch Admins`} />
 
-            <div className="mt-2 mb-5 *:">
-                <table>
-                    <tbody>
-                        <tr>
-                            <td>Name</td>
-                            <td className="mr-2 ml-2">Email</td>
-                            <td>Phone</td>
-                        </tr>
-                        <tr>
-                            <td>{branch.name}</td>
-                            <td className="mr-4 ml-4">{branch.email}</td>
-                            <td>{branch.contact_number}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div className="p-6 w-100">
-                {/* Button to show/hide the form */}
-                <button
-                    onClick={toggleForm}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-                >
-                    {showForm ? "Hide Form" : "Create New Admin"}
-                </button>
+            <main className="page max-w-5xl mx-auto space-y-8">
+                {/* ===== Header ===== */}
+                <div className="flex-between">
+                    <div>
+                        <h1 className="text-2xl font-bold">
+                            {branch.name} Branch Admins
+                        </h1>
+                        <p className="text-muted text-sm mt-1">
+                            Manage administrators for this branch
+                        </p>
+                    </div>
 
-                {/* Conditionally render the form */}
-                {showForm && (
-                    <form
-                        onSubmit={submit}
-                        className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm mx-auto mt-6"
+                    <button
+                        onClick={() => setShowForm(!showForm)}
+                        className="btn btn-primary"
                     >
-                        <h2 className="text-2xl font-bold text-center mb-6 text-gray-700">
-                            Create Admin Account
-                        </h2>
+                        {showForm ? "Close Form" : "Create Admin"}
+                    </button>
+                </div>
 
-                        {/* Full Name */}
-                        <div className="mb-4">
-                            <input
-                                type="text"
-                                value={data.full_name}
-                                onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        full_name: e.target.value,
-                                    })
-                                }
-                                placeholder="Full Name"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
-                            />
+                {/* ===== Branch Info ===== */}
+                <div className="card">
+                    <h2 className="font-semibold text-lg mb-3">
+                        Branch Information
+                    </h2>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                        <div>
+                            <p className="text-muted">Branch Name</p>
+                            <p className="font-medium">{branch.name}</p>
                         </div>
 
-                        {/* Username */}
-                        <div className="mb-4">
-                            <input
-                                type="text"
-                                value={data.username}
-                                onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        username: e.target.value,
-                                    })
-                                }
-                                placeholder="Username"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
-                            />
+                        <div>
+                            <p className="text-muted">Email</p>
+                            <p className="font-medium">{branch.email}</p>
                         </div>
 
-                        {/* Email */}
-                        <div className="mb-4">
-                            <input
-                                type="email"
-                                value={data.email}
-                                onChange={(e) =>
-                                    setData({ ...data, email: e.target.value })
-                                }
-                                placeholder="Email"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
-                            />
+                        <div>
+                            <p className="text-muted">Contact Number</p>
+                            <p className="font-medium">
+                                {branch.contact_number}
+                            </p>
                         </div>
+                    </div>
+                </div>
 
-                        {/* Phone Number */}
-                        <div className="mb-4">
-                            <input
-                                type="number"
-                                value={data.phone_number}
-                                onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        phone_number: e.target.value,
-                                    })
-                                }
-                                placeholder="Phone Number"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
-                            />
+                {/* ===== Animated Form ===== */}
+                <div
+                    className={`
+                        transition-all duration-300 ease-out
+                        ${showForm ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"}
+                    `}
+                >
+                    {showForm && (
+                        <div className="card max-w-3xl ml-auto">
+                            <h3 className="text-lg font-semibold mb-4">
+                                Create Branch Admin
+                            </h3>
+
+                            <form
+                                onSubmit={submit}
+                                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                            >
+                                {/* Full Name */}
+                                <div>
+                                    <label className="text-sm font-medium">
+                                        Full Name
+                                    </label>
+                                    <input
+                                        className="input mt-1"
+                                        type="text"
+                                        value={data.full_name}
+                                        onChange={(e) =>
+                                            setData(
+                                                "full_name",
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+                                </div>
+
+                                {/* Username */}
+                                <div>
+                                    <label className="text-sm font-medium">
+                                        Username
+                                    </label>
+                                    <input
+                                        className="input mt-1"
+                                        type="text"
+                                        value={data.username}
+                                        onChange={(e) =>
+                                            setData(
+                                                "username",
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+                                </div>
+
+                                {/* Email */}
+                                <div>
+                                    <label className="text-sm font-medium">
+                                        Email
+                                    </label>
+                                    <input
+                                        className="input mt-1"
+                                        type="email"
+                                        value={data.email}
+                                        onChange={(e) =>
+                                            setData("email", e.target.value)
+                                        }
+                                    />
+                                </div>
+
+                                {/* Phone */}
+                                <div>
+                                    <label className="text-sm font-medium">
+                                        Phone Number
+                                    </label>
+                                    <input
+                                        className="input mt-1"
+                                        type="text"
+                                        value={data.phone_number}
+                                        onChange={(e) =>
+                                            setData(
+                                                "phone_number",
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+                                </div>
+
+                                {/* Password */}
+                                <div className="relative">
+                                    <label className="text-sm font-medium">
+                                        Password
+                                    </label>
+                                    <input
+                                        className="input mt-1 pr-10"
+                                        type={
+                                            showPassword
+                                                ? "text"
+                                                : "password"
+                                        }
+                                        value={data.password}
+                                        onChange={(e) =>
+                                            setData(
+                                                "password",
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
+                                        className="absolute right-3 top-[42px] text-muted"
+                                    >
+                                        <Icon
+                                            name={
+                                                showPassword
+                                                    ? "eye-off"
+                                                    : "eye"
+                                            }
+                                        />
+                                    </button>
+                                </div>
+
+                                {/* Confirm Password */}
+                                <div>
+                                    <label className="text-sm font-medium">
+                                        Confirm Password
+                                    </label>
+                                    <input
+                                        className="input mt-1"
+                                        type="password"
+                                        value={data.password_confirmation}
+                                        onChange={(e) =>
+                                            setData(
+                                                "password_confirmation",
+                                                e.target.value
+                                            )
+                                        }
+                                    />
+                                </div>
+
+                                {/* Actions */}
+                                <div className="md:col-span-2 flex justify-end gap-4 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowForm(false)}
+                                        className="btn btn-outline"
+                                    >
+                                        Cancel
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="btn btn-primary"
+                                    >
+                                        {processing
+                                            ? "Creating..."
+                                            : "Create Admin"}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-
-                        {/* Password */}
-                        <div className="mb-4">
-                            <input
-                                type="password"
-                                value={data.password}
-                                onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        password: e.target.value,
-                                    })
-                                }
-                                placeholder="Password"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
-                            />
-                        </div>
-
-                        {/* Confirm Password */}
-                        <div className="mb-6">
-                            <input
-                                type="password"
-                                value={data.password_confirmation}
-                                onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        password_confirmation: e.target.value,
-                                    })
-                                }
-                                placeholder="Confirm Password"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
-                            />
-                        </div>
-
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-60"
-                        >
-                            {processing ? "Creating..." : "Sign Up"}
-                        </button>
-                    </form>
-                )}
-            </div>
-        </main>
+                    )}
+                </div>
+            </main>
+        </>
     );
 }
 
-CraeteBranchAdmin.layout = (page) => <Layout>{page}</Layout>;
+CreateBranchAdmin.layout = (page) => (
+    <AdminLayout>{page}</AdminLayout>
+);

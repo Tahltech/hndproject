@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { usePage, router, Head, Link, useForm } from "@inertiajs/react";
-import Layout from "../Layout/Layout";
+//import Layout from "../Layout/Layout";
 import { route } from "ziggy-js";
 import axios from "axios";
 import Select from "react-select";
@@ -152,4 +152,4 @@ export default function BranchAdminDashboard() {
     );
 }
 
-BranchAdminDashboard.layout = (page) => <Layout>{page}</Layout>;
+//BranchAdminDashboard.layout = (page) => <Layout>{page}</Layout>;

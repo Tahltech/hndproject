@@ -1,90 +1,175 @@
 import React, { useState, useEffect } from "react";
-import { usePage, router, Link ,Head} from "@inertiajs/react";
-import Layout from "../Layout/Layout";
+import { Link, Head } from "@inertiajs/react";
 import { route } from "ziggy-js";
 import axios from "axios";
+import AppLayout from "../Layout/AppLayout";
+import AdminLayout from "../Layout/AdminLayout";
+import Icon from "@/Components/Icons";
 
 export default function Admindashboard() {
-    const { errors, flash } = usePage().props;
     const [banks, setBanks] = useState([]);
+    const [search, setSearch] = useState("");
+    const [user, setUSer] = useState(null);
 
     useEffect(() => {
         axios
-            .get("/admin/banks").then((response) => {
-                // Ensure we always get an array
+            .get("/Itadmindashboard/admin/banks")
+            .then((response) => {
                 setBanks(response.data.banks || []);
+                setUSer(response.data.authUser || null);
             })
             .catch((error) => {
                 console.error("Error fetching banks:", error);
             });
     }, []);
 
-    const submit = (e) => {
-        e.preventDefault();
-        router.post("/logout");
-    };
+    /**  Filter banks as user types */
+    const filteredBanks = banks.filter((bank) =>
+        bank.name.toLowerCase().includes(search.toLowerCase())
+    );
+
     return (
-        <main className="p-6">
-             <Head title="Dashboard" />
-            <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+        <>
+            <Head title="Admin Dashboard" />
 
-            {/* Show errors if any */}
-            {errors && Object.keys(errors).length > 0 && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    <ul>
-                        {Object.entries(errors).map(([key, message]) => (
-                            <li key={key}>{message}</li>
-                        ))}
-                    </ul>
+            <main className="space-y-8">
+                {/* ===== Top Right Bar ===== */}
+                <div className="flex justify-end">
+                    <div className="flex items-center gap-6">
+                        {/* Search */}
+                        <div className="relative w-64">
+                            <Icon
+                                name="search"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]"
+                            />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search banks..."
+                                className="
+                    w-full pl-10 pr-3 py-2.5
+                    rounded-xl
+                    border border-[var(--color-border)]
+                    bg-[var(--color-surface)]
+                    text-sm
+                    focus:outline-none
+                    focus:ring-2 focus:ring-[var(--color-primary-light)]
+                    focus:border-[var(--color-primary)]
+                "
+                            />
+                        </div>
+
+                        {/* Profile */}
+                        <div className="flex flex-col items-center cursor-pointer group">
+                            <div
+                                className="
+                              w-12 h-12 rounded-full
+                                 overflow-hidden
+                                     bg-[var(--color-primary-light)]
+                             flex items-center justify-center
+                              group-hover:ring-2 group-hover:ring-[var(--color-primary)]
+                            transition
+                           "
+                            >
+                                <img
+                                    src={
+                                        user?.profile_photo
+                                            ? `/storage/profile_photos/${user.profile_photo}`
+                                            : "/storage/profile_photos/default-avatar.png"
+                                    }
+                                    alt={user?.full_name || "User"}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <p className="text-xs font-semibold mt-1">
+                                {user?.username || "username"}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            )}
 
-            {/* Show flash message if Laravel set one */}
-            {flash?.error && (
-                <div className="bg-red-200 text-red-700 px-3 py-2 rounded mb-4">
-                    {flash.error}
+                {/*Stats / Actions */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-5 shadow-sm">
+                        <p className="text-sm text-[var(--color-text-muted)]">
+                            Total Banks
+                        </p>
+                        <h3 className="text-3xl font-extrabold mt-1">
+                            {banks.length}
+                        </h3>
+                    </div>
+
+                    <Link
+                        href={route("itadmin.createbank")}
+                        className="
+                            bg-[var(--color-primary)]
+                            text-white
+                            rounded-2xl
+                            p-5
+                            shadow
+                            flex items-center justify-between
+                            hover:opacity-90
+                            transition
+                        "
+                    >
+                        <div>
+                            <p className="text-sm opacity-90">Add New Bank</p>
+                            <h3 className="text-xl font-bold mt-1">
+                                Create Bank
+                            </h3>
+                        </div>
+                        <Icon name="bank" className="w-6 h-6" />
+                    </Link>
                 </div>
-            )}
-            {flash?.success && (
-                <div className="bg-green-200 text-green-700 px-3 py-2 rounded mb-4">
-                    {flash.success}
+
+                {/* Banks List */}
+                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-sm">
+                    <div className="px-6 py-4 border-b border-[var(--color-border)]">
+                        <h2 className="text-lg font-semibold">
+                            Available Banks
+                        </h2>
+                        <p className="text-sm text-[var(--color-text-muted)]">
+                            Select a bank to manage administrators
+                        </p>
+                    </div>
+
+                    {filteredBanks.length === 0 ? (
+                        <div className="p-6 text-sm text-[var(--color-text-muted)]">
+                            No banks found.
+                        </div>
+                    ) : (
+                        <ul className="divide-y divide-[var(--color-border)]">
+                            {filteredBanks.map((bank) => (
+                                <li key={bank.bank_id}>
+                                    <Link
+                                        href={route(
+                                            "itadmin.create.admin",
+                                            bank.bank_id
+                                        )}
+                                        className="
+                                            flex items-center justify-between
+                                            px-6 py-4
+                                            hover:bg-[var(--color-primary-light)]
+                                            transition
+                                        "
+                                    >
+                                        <span className="font-medium">
+                                            {bank.name}
+                                        </span>
+                                        <Icon
+                                            name="bank"
+                                            className="w-4 h-4 text-[var(--color-text-muted)]"
+                                        />
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
-            )}
-
-            <form onSubmit={submit}>
-                <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-4"
-                >
-                    Logout
-                </button>
-            </form>
-
-            <Link
-                href={route("createbank")}
-                className="mt-7 px-6 py-3 text-lg font-semibold text-white bg-green-600 rounded shadow-md hover:bg-green-700 hover:shadow-lg transition-all duration-300 ease-in-out mb-4"
-            >
-                Create Bank
-            </Link>
-
-            {/* bank information  */}
-
-            <div className="p-6">
-                <h2 className="text-xl mb-2">Available Banks</h2>
-                <ul>
-                    {banks.map((bank, i) => (
-
-                        <Link
-                            key={bank.bank_id}
-                            href={route("create.admin", bank.bank_id)}
-                            className="border p-2 rounded mb-2 mr-1"
-                        >
-                            {bank.name}
-                        </Link>
-                    ))}
-                </ul>
-            </div>
-        </main>
+            </main>
+        </>
     );
 }
-Admindashboard.layout = (page) => <Layout>{page}</Layout>;
+
+Admindashboard.layout = (page) => <AdminLayout>{page}</AdminLayout>;

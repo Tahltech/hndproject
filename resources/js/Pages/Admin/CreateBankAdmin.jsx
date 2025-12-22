@@ -1,179 +1,195 @@
-import Layout from "@/Pages/Layout/Layout";
-import { useForm, usePage, Link, Head } from "@inertiajs/react";
+import React, { useState } from "react";
+import { useForm, Head } from "@inertiajs/react";
 import { route } from "ziggy-js";
-import React, {useState} from "react";
+import AdminLayout from "@/Pages/Layout/AdminLayout";
+import Icon from "@/Components/Icons";
 
-export default function CraeteBankAdmin({ bank }) {
-    const { props } = usePage();
-    const { errors } = props;
-     const [showForm, setShowForm] = useState(false);
+export default function CreateBankAdmin({ bank }) {
+    const [showForm, setShowForm] = useState(false);
 
-    const { data, post, setData, processing } = useForm({
+    const { data, post, setData, processing, errors } = useForm({
         full_name: "",
         username: "",
         email: "",
-        bank_id: bank.bank_id,
         phone_number: "",
         password: "",
         password_confirmation: "",
+        bank_id: bank.id,
     });
-    
-      const toggleForm = () => {
-        setShowForm(!showForm);
-    };
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("bank.admin"));
+        post(route("itadmin.bank.admin"));
     };
+
     return (
-        <main className="flex justify-center items-center min-h-screen bg-gray-100 flex-col">
-             <Head title="BankAdmin" />
-            <h1 className="mb-3 mt-0.5 ">
-                {bank?.name ? `${bank.name} ` : ""} Banks Information
-            </h1>
+        <>
+            <Head title="Create Bank Admin" />
 
-            <div className="mt-2 mb-5 *:">
-                <table>
-                    <tbody>
-                        <tr>
-                            <td>Name</td>
-                            <td className="mr-2 ml-2">Email</td>
-                            <td>Phone</td>
-                        </tr>
-                        <tr>
-                            <td>{bank.name}</td>
-                            <td className="mr-4 ml-4">{bank.email}</td>
-                            <td>{bank.contact_number}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div className="p-6 w-100">
-                {/* Button to show/hide the form */}
-                <button
-                    onClick={toggleForm}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-                >
-                    {showForm ? "Hide Form" : "Create New Admin"}
-                </button>
+            <main className="space-y-8 max-w-5xl mx-auto">
+                {/* ===== Bank Info Card ===== */}
+                <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
+                    <h1 className="text-xl font-bold mb-4">
+                        {bank.name} – Bank Information
+                    </h1>
 
-                {/* Conditionally render the form */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <p className="text-[var(--color-text-muted)]">
+                                Bank Name
+                            </p>
+                            <p className="font-semibold">{bank.name}</p>
+                        </div>
+
+                        <div>
+                            <p className="text-[var(--color-text-muted)]">
+                                Email
+                            </p>
+                            <p className="font-semibold">
+                                {bank.email || "N/A"}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p className="text-[var(--color-text-muted)]">
+                                Contact Number
+                            </p>
+                            <p className="font-semibold">
+                                {bank.contact_number || "N/A"}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ===== Action Button ===== */}
+                <div className="flex justify-end">
+                    <button
+                        onClick={() => setShowForm(!showForm)}
+                        className="
+                            flex items-center gap-2
+                            bg-[var(--color-primary)]
+                            text-white
+                            px-5 py-2.5
+                            rounded-xl
+                            hover:opacity-90
+                            transition
+                        "
+                    >
+                        <Icon name="user-plus" className="w-4 h-4" />
+                        {showForm ? "Hide Form" : "Create Bank Admin"}
+                    </button>
+                </div>
+
+                {/* ===== Create Admin Form ===== */}
                 {showForm && (
                     <form
                         onSubmit={submit}
-                        className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm mx-auto mt-6"
+                        className="
+                            bg-[var(--color-surface)]
+                            border border-[var(--color-border)]
+                            rounded-2xl
+                            p-6
+                            shadow-sm
+                            max-w-xl
+                        "
                     >
-                        <h2 className="text-2xl font-bold text-center mb-6 text-gray-700">
+                        <h2 className="text-lg font-semibold mb-6">
                             Create Admin Account
                         </h2>
 
-                        {/* Full Name */}
-                        <div className="mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <input
                                 type="text"
+                                placeholder="Full Name"
                                 value={data.full_name}
                                 onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        full_name: e.target.value,
-                                    })
+                                    setData("full_name", e.target.value)
                                 }
-                                placeholder="Full Name"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                                className="input"
                             />
-                        </div>
 
-                        {/* Username */}
-                        <div className="mb-4">
                             <input
                                 type="text"
+                                placeholder="Username"
                                 value={data.username}
                                 onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        username: e.target.value,
-                                    })
+                                    setData("username", e.target.value)
                                 }
-                                placeholder="Username"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                                className="input"
                             />
-                        </div>
 
-                        {/* Email */}
-                        <div className="mb-4">
                             <input
                                 type="email"
+                                placeholder="Email"
                                 value={data.email}
                                 onChange={(e) =>
-                                    setData({ ...data, email: e.target.value })
+                                    setData("email", e.target.value)
                                 }
-                                placeholder="Email"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                                className="input"
                             />
-                        </div>
 
-                        {/* Phone Number */}
-                        <div className="mb-4">
                             <input
-                                type="number"
+                                type="text"
+                                placeholder="Phone Number"
                                 value={data.phone_number}
                                 onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        phone_number: e.target.value,
-                                    })
+                                    setData("phone_number", e.target.value)
                                 }
-                                placeholder="Phone Number"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                                className="input"
                             />
-                        </div>
 
-                        {/* Password */}
-                        <div className="mb-4">
                             <input
                                 type="password"
+                                placeholder="Password"
                                 value={data.password}
                                 onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        password: e.target.value,
-                                    })
+                                    setData("password", e.target.value)
                                 }
-                                placeholder="Password"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                                className="input"
                             />
-                        </div>
 
-                        {/* Confirm Password */}
-                        <div className="mb-6">
                             <input
                                 type="password"
+                                placeholder="Confirm Password"
                                 value={data.password_confirmation}
                                 onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        password_confirmation: e.target.value,
-                                    })
+                                    setData(
+                                        "password_confirmation",
+                                        e.target.value
+                                    )
                                 }
-                                placeholder="Confirm Password"
-                                className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                                className="input"
                             />
                         </div>
 
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-60"
-                        >
-                            {processing ? "Creating..." : "Sign Up"}
-                        </button>
+                        <div className="mt-6">
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="
+                                    w-full
+                                    bg-[var(--color-primary)]
+                                    text-white
+                                    py-3
+                                    rounded-xl
+                                    font-semibold
+                                    hover:opacity-90
+                                    transition
+                                    disabled:opacity-60
+                                "
+                            >
+                                {processing
+                                    ? "Creating Admin..."
+                                    : "Create Admin"}
+                            </button>
+                        </div>
                     </form>
                 )}
-            </div>
-        </main>
+            </main>
+        </>
     );
 }
 
-CraeteBankAdmin.layout = (page) => <Layout>{page}</Layout>;
+CreateBankAdmin.layout = (page) => (
+    <AdminLayout>{page}</AdminLayout>
+);

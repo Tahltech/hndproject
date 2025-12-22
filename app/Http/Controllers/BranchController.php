@@ -7,29 +7,30 @@ use App\Models\User;
 use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Validator;
 use function Laravel\Prompts\select;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class BranchController extends Controller
 {
-    public function branchAdmin($id)
+    // public function branchAdmin($id)
+    // {
+    //     $branch = Branch::findOrFail($id);
+    //     return inertia('Admin1/CreateBranchAdmin', [
+    //         'branch' => $branch,
+    //     ]);
+    // }
+    public function availableBranches($id)
     {
-        $branch = Branch::findOrFail($id);
-        return inertia('Admin1/CreateBranchAdmin', [
-            'branch' => $branch,
+        $branches = Branch::where('bank_id', $id)
+            ->select('branch_id', 'name', 'address')
+            ->get();
+        return Inertia::render('Branches', [
+            'branches' => $branches
         ]);
     }
-   public function availableBranches($id)
-{
-    $branches = Branch::where('bank_id', $id)
-        ->select('branch_id', 'name', 'address')
-        ->get();
-    return Inertia::render('Branches', [
-        'branches' => $branches
-    ]);
-}
 
     /**
      * Display a listing of the resource.
@@ -53,45 +54,25 @@ class BranchController extends Controller
             'branches' => $branches
         ]);
     }
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+
+    public function alladmins()
     {
-        //
+        $user = Auth::user();
+
+       
+        $admins = User::with(['role', 'branch'])
+            ->whereHas('role', function ($query) {
+                $query->where('role_name', 'branch_manager');
+            })->latest()
+            ->get();
+
+
+        return Inertia::render("Admin1/BranchAdmins",[
+            'branches'=> $admins,
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //creating branches of banks
 
-        $bankId = Auth::user()->bank_id;
-        $request->validate(
-            [
-                'name' => 'required',
-                'address' => 'required',
-                'contact_number' => 'required',
-                'email' => 'required',
-            ]
-        );
-
-        Branch::create(
-            [
-                'bank_id' => $bankId,
-                'name' => $request->name,
-                'address' => $request->address,
-                'contact_number' => $request->contact_number,
-                'email' => $request->email,
-
-            ]
-        );
-
-
-        return redirect()->route('bnkadmindashboard')->with('success', 'Branch created successfully');
-    }
 
     public function availableusers(Request $request)
     {
@@ -118,34 +99,107 @@ class BranchController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Dashboard: Show all branches for the authenticated bank admin
      */
-    public function show(string $id)
+    public function dashboard()
     {
-        //
+        $user = Auth::user();
+        $bank = $user->bank;
+
+        // Fetch branches belonging to the bank
+        $branches = Branch::where('bank_id', $bank->id)->get();
+
+        return Inertia::render('Admin1/Admindashboard', [
+            'branches' => $branches,
+            'authUser' => $user,
+        ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Store a new branch
      */
-    public function edit(string $id)
+    public function store(Request $request)
     {
-        //
+        $user = Auth::user();
+        $bank = $user->bank;
+
+        // Validate input
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:branches,name,NULL,id,bank_id,' . $bank->id,
+            'location' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return Redirect::back()->withErrors($validator)->withInput();
+        }
+
+        // Create branch
+        Branch::create([
+            'bank_id' => $bank->id,
+            'name' => $request->name,
+            'location' => $request->location,
+            'status' => 'active', // default status
+        ]);
+
+        return Redirect::route('bnkadmindashboard')->with('success', 'Branch created successfully.');
     }
 
     /**
-     * Update the specified resource in storage.
+     * Show the branch admin page for a specific branch
      */
-    public function update(Request $request, string $id)
+    public function branchAdmin(Branch $branch)
     {
-        //
+        $user = Auth::user();
+
+        if ($branch->bank_id !== $user->bank_id) {
+            abort(403, 'Unauthorized access to this branch.');
+        }
+
+        return Inertia::render('Admin1/CreateBranchAdmin', [
+            'branch' => $branch,
+            'authUser' => $user,
+        ]);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Update branch (optional)
      */
-    public function destroy(string $id)
+    public function update(Request $request, Branch $branch)
     {
-        //
+        $user = Auth::user();
+
+        if ($branch->bank_id !== $user->bank_id) {
+            abort(403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:branches,name,' . $branch->id . ',id,bank_id,' . $user->bank_id,
+            'location' => 'nullable|string|max:255',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        if ($validator->fails()) {
+            return Redirect::back()->withErrors($validator)->withInput();
+        }
+
+        $branch->update($request->only(['name', 'location', 'status']));
+
+        return Redirect::route('bnkadmindashboard')->with('success', 'Branch updated successfully.');
+    }
+
+    /**
+     * Delete branch (optional)
+     */
+    public function destroy(Branch $branch)
+    {
+        $user = Auth::user();
+
+        if ($branch->bank_id !== $user->bank_id) {
+            abort(403);
+        }
+
+        $branch->delete();
+
+        return Redirect::route('bnkadmindashboard')->with('success', 'Branch deleted successfully.');
     }
 }
