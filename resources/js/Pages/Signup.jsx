@@ -4,7 +4,8 @@ import { route } from "ziggy-js";
 import Icon from "@/Components/Icons";
 import AuthLayout from "./Layout/AuthLayout";
 
-export default function Signup() {
+export default function Signup({ bank_id, branch_id }) {
+    const isBranchSignup = !!branch_id;
     const { props } = usePage();
     const { errors } = props;
 
@@ -15,6 +16,8 @@ export default function Signup() {
         phone_number: "",
         password: "",
         password_confirmation: "",
+        bank_id,
+        branch_id,
     });
 
     const submit = (e) => {
@@ -24,7 +27,11 @@ export default function Signup() {
 
     const inputClass = (error) => `
         w-full pl-10 pr-3 py-2.5 rounded-lg border
-        ${error ? "border-red-500 focus:ring-red-500" : "border-[var(--color-border)] focus:ring-[var(--color-primary-light)]"}
+        ${
+            error
+                ? "border-red-500 focus:ring-red-500"
+                : "border-[var(--color-border)] focus:ring-[var(--color-primary-light)]"
+        }
         focus:outline-none focus:ring-2
     `;
 
@@ -43,25 +50,39 @@ export default function Signup() {
             >
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h2 className="text-2xl font-extrabold text-[var(--color-text-primary)]">
-                        Create Your Account
-                    </h2>
+                    <h1 className="text-2xl font-bold">
+                        {isBranchSignup
+                            ? "Open Account Under a Branch"
+                            : "Create Your Account"}
+                    </h1>
+
+                    {isBranchSignup && (
+                        <p className="text-sm text-muted">
+                            You are registering under a bank branch
+                        </p>
+                    )}
                     <p className="text-sm text-[var(--color-text-muted)] mt-1">
                         Join TahlFIN and manage your finances smarter
                     </p>
                 </div>
-
+                <input type="hidden" name="bank_id" value={bank_id || ""} />
+                <input type="hidden" name="branch_id" value={branch_id || ""} />
                 {/* Full Name */}
                 <div className="mb-4">
                     <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
                         Full Name
                     </label>
                     <div className="relative">
-                        <Icon name="users" className={iconClass(errors.full_name)} />
+                        <Icon
+                            name="users"
+                            className={iconClass(errors.full_name)}
+                        />
                         <input
                             type="text"
                             value={data.full_name}
-                            onChange={(e) => setData("full_name", e.target.value)}
+                            onChange={(e) =>
+                                setData("full_name", e.target.value)
+                            }
                             placeholder="John Doe"
                             className={inputClass(errors.full_name)}
                         />
@@ -74,11 +95,16 @@ export default function Signup() {
                         Username
                     </label>
                     <div className="relative">
-                        <Icon name="users" className={iconClass(errors.username)} />
+                        <Icon
+                            name="users"
+                            className={iconClass(errors.username)}
+                        />
                         <input
                             type="text"
                             value={data.username}
-                            onChange={(e) => setData("username", e.target.value)}
+                            onChange={(e) =>
+                                setData("username", e.target.value)
+                            }
                             placeholder="johndoe"
                             className={inputClass(errors.username)}
                         />
@@ -91,7 +117,10 @@ export default function Signup() {
                         Email Address
                     </label>
                     <div className="relative">
-                        <Icon name="users" className={iconClass(errors.email)} />
+                        <Icon
+                            name="mail"
+                            className={iconClass(errors.email)}
+                        />
                         <input
                             type="email"
                             value={data.email}
@@ -108,15 +137,42 @@ export default function Signup() {
                         Phone Number
                     </label>
                     <div className="relative">
-                        <Icon name="wallet" className={iconClass(errors.phone_number)} />
+                        <Icon
+                            name="phone"
+                            className={iconClass(errors.phone_number)}
+                        />
                         <input
-                            type="text"
+                            type="tel"
                             value={data.phone_number}
-                            onChange={(e) => setData("phone_number", e.target.value)}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setData("phone_number", value);
+
+                                // Front-end validation
+                                const phoneRegex = /^\+?[0-9]{7,15}$/; 
+                                
+                                if (!phoneRegex.test(value)) {
+                                    setErrors((prev) => ({
+                                        ...prev,
+                                        phone_number:
+                                            "Enter a valid phone number (7-15 digits, optional +)",
+                                    }));
+                                } else {
+                                    setErrors((prev) => ({
+                                        ...prev,
+                                        phone_number: "",
+                                    }));
+                                }
+                            }}
                             placeholder="+237 xxx xxx xxx"
                             className={inputClass(errors.phone_number)}
                         />
                     </div>
+                    {errors.phone_number && (
+                        <p className="text-red-500 text-xs mt-1">
+                            {errors.phone_number}
+                        </p>
+                    )}
                 </div>
 
                 {/* Password */}
@@ -125,11 +181,16 @@ export default function Signup() {
                         Password
                     </label>
                     <div className="relative">
-                        <Icon name="security" className={iconClass(errors.password)} />
+                        <Icon
+                            name="security"
+                            className={iconClass(errors.password)}
+                        />
                         <input
                             type="password"
                             value={data.password}
-                            onChange={(e) => setData("password", e.target.value)}
+                            onChange={(e) =>
+                                setData("password", e.target.value)
+                            }
                             placeholder="••••••••"
                             className={inputClass(errors.password)}
                         />
@@ -142,11 +203,16 @@ export default function Signup() {
                         Confirm Password
                     </label>
                     <div className="relative">
-                        <Icon name="security" className={iconClass(errors.password_confirmation)} />
+                        <Icon
+                            name="security"
+                            className={iconClass(errors.password_confirmation)}
+                        />
                         <input
                             type="password"
                             value={data.password_confirmation}
-                            onChange={(e) => setData("password_confirmation", e.target.value)}
+                            onChange={(e) =>
+                                setData("password_confirmation", e.target.value)
+                            }
                             placeholder="••••••••"
                             className={inputClass(errors.password_confirmation)}
                         />
@@ -171,6 +237,12 @@ export default function Signup() {
                         className="font-semibold text-[var(--color-primary)] hover:underline"
                     >
                         Login
+                    </Link>
+                    <Link
+                        href={route("home")}
+                        className="font-semibold text-[var(--color-primary)] hover:underline ml-3"
+                    >
+                        Home
                     </Link>
                 </p>
             </form>

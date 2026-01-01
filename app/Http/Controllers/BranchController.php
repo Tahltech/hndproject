@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bank;
 use App\Models\User;
 use App\Models\Branch;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -28,7 +29,8 @@ class BranchController extends Controller
             ->select('branch_id', 'name', 'address')
             ->get();
         return Inertia::render('Branches', [
-            'branches' => $branches
+            'branches' => $branches,
+            'bank_id' => $id
         ]);
     }
 
@@ -59,7 +61,7 @@ class BranchController extends Controller
     {
         $user = Auth::user();
 
-       
+
         $admins = User::with(['role', 'branch'])
             ->whereHas('role', function ($query) {
                 $query->where('role_name', 'branch_manager');
@@ -67,8 +69,8 @@ class BranchController extends Controller
             ->get();
 
 
-        return Inertia::render("Admin1/BranchAdmins",[
-            'branches'=> $admins,
+        return Inertia::render("Admin1/BranchAdmins", [
+            'branches' => $admins,
         ]);
     }
 
@@ -126,7 +128,13 @@ class BranchController extends Controller
         // Validate input
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:branches,name,NULL,id,bank_id,' . $bank->id,
-            'location' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:255',
+            "contact_number" => 'required',
+            'string',
+            'min:7',
+            'max:20',
+            'regex:/^[0-9+\s()-]+$/',
+            'email' => 'required|string|max:100'
         ]);
 
         if ($validator->fails()) {
@@ -135,10 +143,11 @@ class BranchController extends Controller
 
         // Create branch
         Branch::create([
-            'bank_id' => $bank->id,
+            'bank_id' => $bank->bank_id,
             'name' => $request->name,
-            'location' => $request->location,
-            'status' => 'active', // default status
+            'address' => $request->address,
+            'contact_number' => $request->contact_number,
+            'email' => $request->email,
         ]);
 
         return Redirect::route('bnkadmindashboard')->with('success', 'Branch created successfully.');
@@ -202,4 +211,24 @@ class BranchController extends Controller
 
         return Redirect::route('bnkadmindashboard')->with('success', 'Branch deleted successfully.');
     }
+
+
+
+public function destroyAdmin(User $user)
+{
+    $authUser = Auth::user();
+
+    // Check if the user belongs to the same bank as the authenticated user
+    if ($user->bank_id !== $authUser->bank_id) {
+        abort(403, 'You do not have permission to deactivate this user.');
+    }
+
+    // Instead of deleting, set status to 'inactive'
+    $user->update([
+        'status' => 'inactive',
+    ]);
+
+    return redirect()->route('bnkadmindashboard')->with('success', 'User has been deactivated successfully.');
+}
+
 }

@@ -76,11 +76,11 @@ export default function Admindashboard() {
                                      group-hover:ring-2 group-hover:ring-[var(--color-primary)]
                                    transition
                                   "
-                            >
+                            >         
                                 <img
                                     src={
                                         user?.profile_photo
-                                            ? `/storage/profile_photos/${user.profile_photo}`
+                                            ? `/storage/bank_logos/${user?.bank?.profile_photo}`
                                             : "/storage/profile_photos/default-avatar.png"
                                     }
                                     alt={user?.full_name || "User"}

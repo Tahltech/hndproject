@@ -6,8 +6,9 @@ use App\Models\Bank;
 use Inertia\Inertia;
 use App\Models\Branch;
 use Illuminate\Http\Request;
+use App\Models\Role;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Foundation\Auth\User;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -39,10 +40,10 @@ class BankController extends Controller
 
     public function createAdmin(Request $request, $id)
     {
-        // find that specific bank
-        if (!$request->ajax() && !$request->wantsJson()) {
-            abort(404);
-        }
+        // // find that specific bank
+        // if (!$request->ajax() && !$request->wantsJson()) {
+        //     abort(404);
+        // }
 
         $bank = Bank::findOrFail($id);
         return inertia('Admin/CreateBankAdmin', [
@@ -80,7 +81,7 @@ class BankController extends Controller
         ]);
 
 
-        return redirect()->route("admindashboard")->with("success", "Bank created succcessfully");
+        return redirect()->back()->with("success", "Bank created succcessfully");
     }
     /**
      * Store a new bank admin user.
@@ -92,7 +93,7 @@ class BankController extends Controller
             'username' => 'required|string|max:50|unique:users,username',
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|confirmed|min:8',
-            'bank_id' => 'required|exists:banks,id',
+            'bank_id' => 'required|exists:banks,bank_id',
         ]);
 
         $user = User::create([
@@ -104,7 +105,7 @@ class BankController extends Controller
             'role_id' => 2, // assuming 2 = Bank Admin role
         ]);
 
-        return redirect()->route('allbankadmins')
+        return redirect()->back()
             ->with('success', 'Bank Admin created successfully!');
     }
 
@@ -113,13 +114,15 @@ class BankController extends Controller
      */
     public function allAdmins()
     {
-        $authBankId = Auth::user()->bank_id;
-
-        $admins = User::where('bank_id', $authBankId)
-            ->where('role_id', 2) // bank admin role
+        $admins = User::with(['role', 'bank'])
+            ->whereHas('role', function ($query) {
+                $query->where('role_name', 'overall_admin');
+            })->latest()
             ->get();
 
-        return view('Bank.allAdmins', compact('admins'));
+        return Inertia::render('Admin/BankAdmins', [
+            'bankAdmins' => $admins,
+        ]);
     }
 
     /**
@@ -130,14 +133,14 @@ class BankController extends Controller
     {
         DB::transaction(function () use ($user) {
 
-            // Toggle user status
+            // toggle user status
             $newStatus = $user->status === 'active' ? 'pending' : 'active';
-
+           
             $user->update([
                 'status' => $newStatus,
             ]);
 
-            // Check if user is overall admin
+            // check if user is overall admin
             if (
                 $user->role &&
                 $user->role->role_name === 'overall_admin' &&
@@ -153,21 +156,21 @@ class BankController extends Controller
                     'status' => $newStatus,
                 ]);
             }
-             if (
-            $user->role &&
-            $user->role->role_name === 'branch_manager' &&
-            $user->branch
-        ) {
-           
-            $user->bank->update([
-                'status' => $newStatus,
-            ]);
+            if (
+                $user->role &&
+                $user->role->role_name === 'branch_manager' &&
+                $user->branch
+            ) {
 
-            // Update ALL users under this bank
-            $user->bank->users()->update([
-                'status' => $newStatus,
-            ]);
-        }
+                $user->branch->update([
+                    'status' => $newStatus,
+                ]);
+
+                // Update ALL users under this branch
+                $user->branch->users()->update([
+                    'status' => $newStatus,
+                ]);
+            }
         });
 
         return back()->with('success', 'User and bank status updated successfully');

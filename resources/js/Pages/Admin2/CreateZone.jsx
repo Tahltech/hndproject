@@ -1,9 +1,10 @@
 import React from "react";
 import { useForm } from "@inertiajs/react";
 import { route } from "ziggy-js";
+import AdminLayout from "../Layout/AdminLayout";
 
-export default function () {
-    const { data, setData, post } = useForm({
+export default function CreateZone() {
+    const { data, setData, post, processing } = useForm({
         zoneName: "",
     });
 
@@ -12,43 +13,45 @@ export default function () {
         post(route("savezone"));
     };
 
-    const logout = (e) => {
-        e.preventDefault();
-        post(route("logout"));
-    };
-
     return (
-        <>
-            <h2 className="mb-19">Welcome </h2>
-
-            {/* Zone Creation Form */}
-            <form onSubmit={submitZone} className="w-100">
-                <p className="font-bold">Enter the Zone Name</p>
-
-                <input
-                    type="text"
-                    value={data.zoneName}
-                    placeholder="Enter Zone Name"
-                    onChange={(e) => setData("zoneName", e.target.value)}
-                    className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500 mb-3"
-                />
-                <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-4 w-full"
-                >
+        <main className="page">
+            {/* Page Header */}
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
                     Create Zone
-                </button>
-            </form>
+                </h1>
+                <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                    Enter the details to create a new zone for your branch.
+                </p>
+            </div>
 
-            {/* Logout Form */}
-            <form onSubmit={logout}>
-                <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-3"
-                >
-                    Logout
-                </button>
-            </form>
-        </>
+            {/* Form Card */}
+            <div className="card max-w-md mx-auto p-6">
+                <form onSubmit={submitZone} className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-sm text-[var(--color-text-muted)]">
+                            Zone Name
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="Enter Zone Name"
+                            value={data.zoneName}
+                            onChange={(e) => setData("zoneName", e.target.value)}
+                            className="input"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="btn btn-primary mt-2"
+                    >
+                        {processing ? "Creating..." : "Create Zone"}
+                    </button>
+                </form>
+            </div>
+        </main>
     );
 }
+
+CreateZone.layout = (page) => <AdminLayout>{page}</AdminLayout>;

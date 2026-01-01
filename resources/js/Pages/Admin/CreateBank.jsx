@@ -16,7 +16,7 @@ export default function CreateBank() {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("newbank"), data);
+        post(route("itadmin.newbank"), data);
     };
 
     return (

@@ -15,6 +15,7 @@ class agentZone extends Model
     protected $fillable = [
         'agent_id',
         'zone_id',
+        'branch_id',
 
     ];
 
@@ -23,5 +24,8 @@ class agentZone extends Model
     }
     public function zones(): BelongsTo {
         return $this->belongsTo(Zone::class, 'zone_id', 'zone_id');
+    }
+     public function branches(): BelongsTo {
+        return $this->belongsTo(Branch::class, 'branch_id', 'branch_id');
     }
 }

@@ -10,7 +10,7 @@ class CheckPermission
     public function handle($request, Closure $next, $permission)
     {
 
-        //dd('supportadmindashboard');
+       
 
         /** @var \App\Models\User&\Spatie\Permission\Traits\HasRoles $user */
 

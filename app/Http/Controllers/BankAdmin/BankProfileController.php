@@ -7,6 +7,7 @@ use App\Models\Bank;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use PhpParser\Node\Stmt\TryCatch;
 
 class BankProfileController extends Controller
 {
@@ -17,7 +18,7 @@ class BankProfileController extends Controller
     {
         $user = Auth::user();
 
-        $bank = Bank::where('id', $user->bank_id)->firstOrFail();
+        $bank = Bank::where('bank_id', $user->bank_id)->firstOrFail();
 
         return inertia('Admin1/BankProfile', [
             'bank' => $bank,
@@ -31,9 +32,8 @@ class BankProfileController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'short_name' => 'nullable|string|max:50',
+            'email' => 'nullable|string|max:50',
             'registration_number' => 'nullable|string|max:100',
-            'bank_type' => 'required|string|max:100',
         ]);
 
         $bank = Bank::findOrFail(Auth::user()->bank_id);
@@ -42,10 +42,9 @@ class BankProfileController extends Controller
             'name' => $request->name,
             'short_name' => $request->short_name,
             'registration_number' => $request->registration_number,
-            'bank_type' => $request->bank_type,
         ]);
 
-        return back();
+        return back()->with("success", "bank Info updated successfuully");
     }
 
     /**
@@ -53,30 +52,43 @@ class BankProfileController extends Controller
      */
     public function updateBranding(Request $request)
     {
-        $request->validate([
-            'logo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
-            'primary_color' => 'nullable|string|max:20',
-            'secondary_color' => 'nullable|string|max:20',
+        $data = $request->validate([
+            'quote' => 'nullable|string|max:200',
+            'profile_photo' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
         ]);
 
         $bank = Bank::findOrFail(Auth::user()->bank_id);
 
-        if ($request->hasFile('logo')) {
-            // Delete old logo if exists
-            if ($bank->logo) {
-                Storage::disk('public')->delete($bank->logo);
-            }
-
-            $path = $request->file('logo')->store('banks/logos', 'public');
-            $bank->logo = $path;
+        // Update quote
+        if (isset($data['quote'])) {
+            $bank->quotes = $data['quote'];
         }
 
-        $bank->primary_color = $request->primary_color;
-        $bank->secondary_color = $request->secondary_color;
+        // Handle profile photo upload
+        if ($request->hasFile('profile_photo')) {
+
+            // Delete old photo if exists
+            if ($bank->profile_photo) {
+                Storage::disk('public')->delete('bank_logos/' . $bank->profile_photo);
+            }
+
+            // Generate clean unique filename
+            $filename = time() . '_' . $request->file('profile_photo')->getClientOriginalName();
+
+            // Store file
+            $request->file('profile_photo')->storeAs(
+                'bank_logos',
+                $filename,
+                'public'
+            );
+
+            // Save filename in DB
+            $bank->profile_photo = $filename;
+        }
 
         $bank->save();
 
-        return back();
+        return back()->with('success', 'Branding updated successfully.');
     }
 
     /**
@@ -85,26 +97,24 @@ class BankProfileController extends Controller
     public function updateContact(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|max:255',
             'phone' => 'required|string|max:20',
             'address' => 'required|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
-            'website' => 'nullable|url|max:255',
         ]);
 
         $bank = Bank::findOrFail(Auth::user()->bank_id);
-
+try {
+    
         $bank->update([
-            'email' => $request->email,
-            'phone' => $request->phone,
+            
+            'contact_number' => $request->phone,
             'address' => $request->address,
-            'city' => $request->city,
-            'country' => $request->country,
-            'website' => $request->website,
         ]);
 
-        return back();
+        return back()->with("success", "Bank Contact Details Updated Successfully");
+} catch (\Throwable $th) {
+    //throw $th;
+    return back()->with("error", "Error trying to update Bank Contack Info try Again Later");
+}
     }
 
     /**

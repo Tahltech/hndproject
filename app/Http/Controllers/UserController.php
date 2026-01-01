@@ -11,22 +11,26 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use function Laravel\Prompts\password;
+use Illuminate\Support\Facades\Log;
 
 use Illuminate\Routing\Controller as BaseController;
+use Inertia\Inertia;
 
 class UserController extends Controller
 {
-    // Only authenticated admins can access certain methods
-    // public function __construct()
-    // {
-    //     $this->middleware('auth')->except(['createFrontend', 'storeFrontend']);
-    // }
 
-    // Show frontend registration form
     public function createFrontend()
     {
         $branches = Branch::all();
         return view('users.register', compact('branches'));
+    }
+
+    public function showSignup(Request $request, $bank = null, $branch = null)
+    {
+        return Inertia::render('Signup', [
+            'bank_id'   => $bank,
+            'branch_id' => $branch,
+        ]);
     }
 
     public function login(Request $request)
@@ -57,7 +61,7 @@ class UserController extends Controller
                 case 'user':
                     return redirect()->route('userdashboard');
                 case 'it_admin':
-                   return redirect()->route('itadmin.admindashboard');
+                    return redirect()->route('itadmin.admindashboard');
                 case 'overall_admin':
                     return redirect()->route('bnkadmindashboard');
                 case 'branch_manager':
@@ -85,11 +89,21 @@ class UserController extends Controller
     {
         Auth::logout();
 
+
         $request->session()->invalidate();
+
+
         $request->session()->regenerateToken();
 
-        return redirect()->route('home');
+        return redirect()
+            ->route('home')
+            ->withHeaders([
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
+                'Pragma'        => 'no-cache',
+                'Expires'       => '0',
+            ]);
     }
+
 
 
 
@@ -101,25 +115,45 @@ class UserController extends Controller
             'username' => 'required|string|max:50',
             'email' => 'required|email|unique:users,email',
             'phone_number' => 'required|unique:users,phone_number',
-            'branch_id' => 'exists:branches,branch_id',
             'password' => 'required|min:5|confirmed',
+            'bank_id'     => 'nullable|exists:banks,bank_id',
+            'branch_id'   => 'nullable|exists:branches,branch_id',
 
         ]);
 
         $roleName = 'user';
-        // Legacy role_id for DB relations
         $legacyRole = Role::where('name', $roleName)->first();
-        //Create the user in your main users table
-        $user = User::create([
-            'full_name' => $request->full_name,
-            'username' => strtolower(str_replace(' ', '_', $request->full_name)),
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'branch_id' => $request->branch_id,
-            'role_id' =>  $legacyRole->id,
-            'password' => Hash::make($request->password),
-            'status' => 'active',
-        ]);
+
+
+
+        try {
+            $user = User::create([
+                'full_name'     => $request->full_name,
+                'username'      => $request->username,
+                'email'         => $request->email,
+                'phone_number'  => $request->phone_number,
+                'branch_id'     => $request->branch_id,
+                'bank_id'     => $request->bank_id,
+                'role_id'       => $legacyRole->id,
+                'password'      => Hash::make($request->password),
+                'status'        => 'pending',
+            ]);
+        } catch (\Throwable $e) {
+
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+                'request_data'  => $request->except(['password', 'password_confirmation']),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
+
+
 
         $user->assignRole($roleName);
 
@@ -127,7 +161,6 @@ class UserController extends Controller
     }
 
 
-    //creating a banks overall admin
     public function bankAdmin(Request $request)
     {
         $request->validate([
@@ -141,27 +174,41 @@ class UserController extends Controller
 
         ]);
         $roleName = 'overall_admin';
-        // Legacy role_id for DB relations
         $legacyRole = Role::where('name', $roleName)->first();
-        //Create the user in your main users table
-        $user = User::create([
-            'full_name' => $request->full_name,
-            'username' => strtolower(str_replace(' ', '_', $request->full_name)),
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'branch_id' => $request->branch_id,
-            'role_id' =>  $legacyRole->id,
-            'bank_id' =>  $request->bank_id,
-            'password' => Hash::make($request->password),
-            'status' => 'active',
-        ]);
+
+        try {
+            $user = User::create([
+                'full_name' => $request->full_name,
+                'username' => strtolower(str_replace(' ', '_', $request->full_name)),
+                'email' => $request->email,
+                'phone_number' => $request->phone_number,
+                'branch_id' => $request->branch_id,
+                'role_id' =>  $legacyRole->id,
+                'bank_id' =>  $request->bank_id,
+                'password' => Hash::make($request->password),
+                'status' => 'active',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+                'request_data'  => $request->except(['password', 'password_confirmation']),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
+
 
         $user->assignRole($roleName);
 
-        return redirect()->route("admindashboard")->with('success', 'Your account has been created! Wait for approval.');
+        return redirect()->back()->with('success', 'Your account has been created! Wait for approval.');
     }
 
-     public function branchAdmin(Request $request)
+    public function branchAdmin(Request $request)
     {
         $request->validate([
             'full_name' => 'required|string|max:100',
@@ -174,22 +221,34 @@ class UserController extends Controller
         ]);
 
         $roleName = 'branch_manager';
-        $bankId =Auth::user()->bank_id;
+        $bankId = Auth::user()->bank_id;
         // Legacy role_id for DB relations
         $legacyRole = Role::where('name', $roleName)->first();
-        //Create the user in your main users table
-        $user = User::create([
-            'full_name' => $request->full_name,
-            'username' => strtolower(str_replace(' ', '_', $request->full_name)),
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'branch_id' => $request->branch_id,
-            'role_id' =>  $legacyRole->id,
-            'bank_id' =>  $bankId,
-            'password' => Hash::make($request->password),
-            'status' => 'active',
-        ]);
+        try {
+            $user = User::create([
+                'full_name' => $request->full_name,
+                'username' => strtolower(str_replace(' ', '_', $request->full_name)),
+                'email' => $request->email,
+                'phone_number' => $request->phone_number,
+                'branch_id' => $request->branch_id,
+                'role_id' =>  $legacyRole->id,
+                'bank_id' =>  $bankId,
+                'password' => Hash::make($request->password),
+                'status' => 'active',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+                'request_data'  => $request->except(['password', 'password_confirmation']),
+            ]);
 
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
         $user->assignRole($roleName);
 
         return redirect()->route("bnkadmindashboard")->with('success', 'Your account has been created!');
@@ -211,79 +270,133 @@ class UserController extends Controller
         $request->validate([
             'full_name' => 'required|string|max:100',
             'email' => 'required|email|unique:users,email',
-            'username'=>'string|max:100',
+            'username' => 'string|max:100',
             'phone_number' => 'required|unique:users,phone_number',
             'role' => 'required|exists:roles,role_name',
             'password' => 'required',
         ]);
 
         $staff = Auth::user();
-        $roleId = Role::where("name",$request->role)->first();
+        $roleId = Role::where("name", $request->role)->first();
 
-        //dd($roleId);
 
-      $staffs =  User::create([
+        $staffs =  User::create([
             'full_name' => $request->full_name,
             'username' => $request->username,
             'email' => $request->email,
             'phone_number' => $request->phone_number,
             'branch_id' => $staff->branch_id,
-            'bank_id'=>$staff->bank_id,
+            'bank_id' => $staff->bank_id,
             'role_id' => $roleId->id,
             'password' => Hash::make($request->password),
             'status' => 'active',
         ]);
         //dd($oops);
-          $staffs->assignRole($request->role);
-        
+        $staffs->assignRole($request->role);
+
 
         return redirect()->route("branchadmindashboard")->with('success', 'Staff account created successfully!');
     }
 
-    // Approve pending user (Support Officer or Branch Admin)
-    public function approveUser($id)
+    public function pending()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route("home");
+        }
+        $users = User::where('branch_id', $user->branch_id)
+            ->where('status', 'pending')
+            ->get();
+
+        return Inertia::render("Admin2/RequestedUsers", [
+            'users' => $users,
+        ]);
+    }
+
+    public function approve($id)
     {
         $user = User::findOrFail($id);
-        $user->status = 'active';
-        $user->save();
+        try {
+            $user->status = 'active';
+            $user->save();
+        } catch (\Throwable $e) {
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
 
         return redirect()->back()->with('success', 'User approved successfully!');
     }
 
     // Reject pending user
-    public function rejectUser($id)
+    public function reject($id)
     {
         $user = User::findOrFail($id);
-        $user->status = 'rejected';
-        $user->save();
+        if (!$user) {
+            return redirect()->route("home");
+        }
+        try {
+            $user->status = 'rejected';
+            $user->save();
+        } catch (\Throwable $e) {
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
 
         return redirect()->back()->with('success', 'User registration rejected.');
     }
 
-    /**
-     * create
-     */
 
-    // List all users for branch dashboard
     public function index()
     {
         $users = User::where('branch_id', Auth::user()->branch_id)->get();
         return view('users.index', compact('users'));
     }
-    
-    public function zonesave(Request $request){
+
+    public function zonesave(Request $request)
+    {
         $request->validate([
-            "zoneName"=>'required|min:5',
+            "zoneName" => 'required|min:5',
         ]);
 
         $branchId = Auth::user()->branch_id;
 
-        Zone::create([
-            'branch_id'=>$branchId,
-            'name'=>$request->zoneName,
-        ]);
+
+
+        try {
+            Zone::create([
+                'branch_id' => $branchId,
+                'name' => $request->zoneName,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
+
 
         return redirect()->route("branchadmindashboard")->with("success", "zone created succesfully");
-
     }
 }

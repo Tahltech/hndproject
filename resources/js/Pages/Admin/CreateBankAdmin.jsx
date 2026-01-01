@@ -14,8 +14,10 @@ export default function CreateBankAdmin({ bank }) {
         phone_number: "",
         password: "",
         password_confirmation: "",
-        bank_id: bank.id,
+        bank_id: bank.bank_id,
     });
+
+    console.log(bank);
 
     const submit = (e) => {
         e.preventDefault();

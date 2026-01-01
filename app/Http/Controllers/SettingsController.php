@@ -21,7 +21,19 @@ class SettingsController extends Controller
             'authUser' => $user,
         ]);
     }
+    public function updatePhoto(Request $request)
+    {
 
+      dd([
+        'all' => $request->all(),
+        'files' => $request->files->all(),
+    ]);
+        $request->validate([
+            'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+
+    }
     public function updateProfile(Request $request)
     {
         /** @var \App\Models\User $user */
@@ -41,9 +53,10 @@ class SettingsController extends Controller
                 Rule::unique('users', 'email')->ignore($user->user_id, 'user_id'),
             ],
             'phone_number' => 'nullable|string|max:20',
-            'profile_photo' => 'nullable|image|max:2048',
+
         ]);
 
+        dd($request->profile_photo);
         // Handle profile photo upload
         if ($request->hasFile('profile_photo')) {
             if ($user->profile_photo && $user->profile_photo !== 'default-avatar.png') {
@@ -97,4 +110,3 @@ class SettingsController extends Controller
         return back()->with('success', 'Notifications updated successfully.');
     }
 }
-

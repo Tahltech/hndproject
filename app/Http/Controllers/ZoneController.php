@@ -2,38 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\agentZone;
+
 use App\Models\User;
 
 use App\Models\Zone;
+use App\Models\agentZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use PhpParser\Node\Stmt\TryCatch;
 
 class ZoneController extends Controller
 {
+
+
     public function agents(Request $request)
     {
-        // find that specific bank
         if (!$request->ajax() && !$request->wantsJson()) {
             abort(404);
         }
 
         $branchId = Auth::user()->branch_id;
+
         $agents = DB::table('users')
-            ->join('spatie_roles', 'users.role_id', '=', 'spatie_roles.id')
+            ->join('roles', 'users.role_id', '=', 'roles.role_id') // updated table and column
+            ->leftJoin('agent_zones', function ($join) use ($branchId) {
+                $join->on('users.user_id', '=', 'agent_zones.agent_id')
+                    ->where('agent_zones.branch_id', '=', $branchId);
+            })
+            ->leftJoin('zones', 'agent_zones.zone_id', '=', 'zones.zone_id')
             ->where('users.branch_id', $branchId)
-            ->where('spatie_roles.name', 'agent')
-            ->select('users.*', 'users.full_name as agentname')
-            ->get();
+            ->where('roles.role_name', 'agent')
+            ->select(
+                'users.*',
+                'users.full_name as agentname',
+                'agent_zones.zone_id',
+                'zones.name',
+                DB::raw('CASE WHEN agent_zones.agent_id IS NULL THEN 0 ELSE 1 END as is_assigned')
+            )->get();
 
         return response()->json([
             'agents' => $agents,
         ]);
-
-
-        //dd($agents);
     }
+
+
+
     public function Zones(Request $request)
     {
         if (!$request->ajax() && !$request->wantsJson()) {
@@ -62,23 +76,26 @@ class ZoneController extends Controller
         ]);
 
 
-       $agent = agentZone::where('agent_id', '=', $request->agent_id)->first();
+        $agent = agentZone::where('agent_id', '=', $request->agent_id)->first();
 
-       if($agent){
-         return redirect()->route("branchadmindashboard")->with("error", "Agent already assined to a zone");
-
-       }
+        if ($agent) {
+            return redirect()->route("branchadmindashboard")->with("error", "Agent already assined to a zone");
+        }
 
         if (!$request) {
             return redirect()->route("branchadmindashboard")->with("error", "Agent does'nt exist");
         }
+        try {
+            agentZone::create([
+                'agent_id'  => $request->agent_id,
+                'zone_id'   => $request->zone_id,
+                'branch_id' => Auth::user()->branch_id,
+            ]);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
 
-        agentZone::create(
-            [
-                'agent_id' => $request->agent_id,
-                'zone_id' => $request->zone_id,
-            ]
-        );
+
 
         $agentIf =  DB::table('users')->where('user_id', '=', $request->agent_id)->first();
 
@@ -91,5 +108,33 @@ class ZoneController extends Controller
 
 
         return redirect()->route('branchadmindashboard')->with('success', 'Agent assigned successfully');
+    }
+
+    public function deassignZone(Request $request)
+    {
+        $data = $request->validate([
+            'zone_id' => 'required',
+        ]);
+
+        // Find the agent-zone relationship
+        $agentZone = agentZone::where('zone_id', $request->zone_id)->first();
+
+        if (!$agentZone) {
+            return redirect()
+                ->route('branchadmindashboard')
+                ->with('error', 'No agent assigned to this zone');
+        }
+
+        // Remove zone from user table
+        DB::table('users')
+            ->where('user_id', $agentZone->agent_id)
+            ->update(['zone_id' => null]);
+
+        // Delete agent-zone record
+        $agentZone->delete();
+
+        return redirect()
+            ->route('branchadmindashboard')
+            ->with('success', 'Agent de-assigned successfully');
     }
 }

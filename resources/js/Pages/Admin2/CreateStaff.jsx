@@ -1,10 +1,10 @@
 import React from "react";
 import { useForm } from "@inertiajs/react";
-import { name } from "ejs";
 import { route } from "ziggy-js";
+import AdminLayout from "../Layout/AdminLayout";
 
 export default function CreateStaff() {
-    const { post, setData, data } = useForm({
+    const { post, setData, data, processing } = useForm({
         full_name: "",
         username: "",
         phone_number: "",
@@ -12,86 +12,95 @@ export default function CreateStaff() {
         role: "",
         password: "",
     });
+
     const submit = (e) => {
         e.preventDefault();
-        post(route("branch_staff"), data);
+        post(route("branch_staff"));
     };
-    return (
-        <>
-            <h1>Create Branch Staff's</h1>
 
-            <form
-                onSubmit={submit}
-                className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm"
-            >
+    return (
+        <main className="page space-y-6">
+            {/* Page Header */}
+            <div className="flex justify-between items-center mb-6">
                 <div>
+                    <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                        Create Branch Staff
+                    </h1>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                        Fill out the form below to register a new branch staff.
+                    </p>
+                </div>
+            </div>
+
+            {/* Form Card */}
+            <div className="card max-w-lg mx-auto p-6">
+                <form onSubmit={submit} className="flex flex-col gap-4">
                     <input
                         type="text"
-                        placeholder="Enter Name"
+                        placeholder="Full Name"
                         value={data.full_name}
                         onChange={(e) => setData("full_name", e.target.value)}
-                        className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                        className="input"
                     />
-                </div>
-                <div>
+
                     <input
                         type="text"
-                        placeholder="Enter User Name"
+                        placeholder="Username"
                         value={data.username}
                         onChange={(e) => setData("username", e.target.value)}
-                        className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                        className="input"
                     />
-                </div>
-                <div>
+
                     <input
                         type="number"
-                        placeholder="Enter Phone Number"
+                        placeholder="Phone Number"
                         value={data.phone_number}
                         onChange={(e) => setData("phone_number", e.target.value)}
-                        className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                        className="input"
                     />
-                </div>
-                <div>
+
                     <input
                         type="email"
-                        placeholder="Enter Email"
+                        placeholder="Email"
                         value={data.email}
                         onChange={(e) => setData("email", e.target.value)}
-                        className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                        className="input"
                     />
-                </div>
-                <div>
+
                     <select
                         value={data.role}
                         onChange={(e) => setData("role", e.target.value)}
-                        className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                        className="input"
                     >
-                        <option value="" disabled>Select Role</option>
+                        <option value="" disabled>
+                            Select Role
+                        </option>
                         <option value="branch_manager">Branch Manager</option>
                         <option value="agent">Agent</option>
                         <option value="loan_officer">Loan Officer</option>
                         <option value="support_officer">Support Officer</option>
                         <option value="accountant">Accountant</option>
                     </select>
-                </div>
 
-                <div>
                     <input
                         type="password"
-                        placeholder="Enter Password"
+                        placeholder="Password"
                         value={data.password}
                         onChange={(e) => setData("password", e.target.value)}
-                        className="w-full p-2 border-b-2 border-gray-300 focus:outline-none focus:border-blue-500"
+                        className="input"
                     />
-                </div>
 
-                <button
-                    type="submit"
-                    className="px-6 py-3 mt-4 text-lg font-semibold text-white bg-green-700 rounded-lg shadow hover:bg-green-800 focus:ring-2 focus:ring-green-400 focus:outline-none transition-all duration-200"
-                >
-                    Register
-                </button>
-            </form>
-        </>
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="btn btn-primary mt-4"
+                    >
+                        {processing ? "Registering..." : "Register"}
+                    </button>
+                </form>
+            </div>
+        </main>
     );
 }
+
+CreateStaff.layout = (page) => <AdminLayout>{page}</AdminLayout>;

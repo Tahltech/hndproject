@@ -14,7 +14,7 @@ use App\Http\Controllers\{
     ZoneController,
     SettingsController,
 };
-use App\Http\Controllers\BankProfileController;
+use App\Http\Controllers\BankAdmin\BankProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,7 +27,10 @@ Route::get('/branches/{id}', [BranchController::class, "availableBranches"])->na
 
 // login / signup
 Route::get('/login', fn() => Inertia::render('Login'))->name('login');
-Route::get('/signup', fn() => Inertia::render('Signup'))->name('signup');
+Route::get('/signup', [UserController::class, "showSignup"])->name('signup');
+Route::get('/banks/{bank}/branches/{branch}/signup', [UserController::class, "showSignup"])->name('branchsignup');
+
+
 
 Route::post('/signup', [UserController::class, 'storeUsers'])->name('signup');
 Route::post('/login', [UserController::class, 'login'])->name('submitlogin');
@@ -37,6 +40,9 @@ Route::post('/logout', [UserController::class, 'logout'])->name('logout');
 Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->name("settings");
     Route::post('/settings/updateprofile', [SettingsController::class, 'updateProfile'])->name("updateprofile");
+
+    Route::post('/settings/profile_photo', [SettingsController::class, 'updatePhoto'])
+        ->name('updateprofile.photo');
     Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->name("updatepassword");
     Route::post('/settings/preferences', [SettingsController::class, 'updatePreferences'])->name("updatepreferences");
 });
@@ -62,12 +68,12 @@ Route::middleware(['auth', 'check_permission:view_dashboard_it_admin'])
         Route::get('/admin/banks', [BankController::class, 'index'])
             ->name('admin.banks');
 
-        Route::get('/bankadmin{id}', [BankController::class, 'createAdmin'])
+        Route::get('/bankadmin/{id}', [BankController::class, 'createAdmin'])
             ->name('create.admin');
 
         Route::post('/bankadmin', [UserController::class, 'bankAdmin'])
             ->name('bank.admin');
-        Route::get("alladmins", [BankController::class, 'Alladmins'])->name('allbankadmins');
+        Route::get("/alladmins", [BankController::class, 'Alladmins'])->name('allbankadmins');
         Route::patch('/bankadmins/{user}/status', [BankController::class, 'toggleStatus'])
             ->name('bankadmin.status');
 
@@ -104,17 +110,18 @@ Route::middleware(['auth'])->prefix('bnkadmindashboard')->group(function () {
     Route::patch('/branch/{branch}/update', [BranchController::class, 'update'])
         ->name('updatebranch');
 
-    Route::delete('/branch/{branch}/delete', [BranchController::class, 'destroy'])
+    Route::delete('/branch/{user}/delete', [BranchController::class, 'destroyAdmin'])
         ->name('deletebranch');
     Route::patch('/branch/{user}/status', [BankController::class, 'toggleStatus'])
         ->name('togglestatusbranchadmin');
-         Route::get('/profile', [BankProfileController::class, 'show'])->name('bank.profile');
 
-    Route::patch('/profile/general', [BankProfileController::class, 'updateGeneral']);
-    Route::patch('/profile/branding', [BankProfileController::class, 'updateBranding']);
-    Route::patch('/profile/contact', [BankProfileController::class, 'updateContact']);
+
+    Route::get('/profile', [BankProfileController::class, 'show'])->name('bankprofile');
+
+    Route::patch('/profile/general', [BankProfileController::class, 'updateGeneral'])->name("bank.profile.general");
+    Route::post('/profile/branding', [BankProfileController::class, 'updateBranding'])->name("bank.profile.branding");
+    Route::patch('/profile/contact', [BankProfileController::class, 'updateContact'])->name("bank.profile.contact");
     Route::patch('/profile/settings', [BankProfileController::class, 'updateSettings']);
-
 });
 
 
@@ -140,14 +147,14 @@ Route::middleware('auth')->prefix('branchadmindashboard')->group(function () {
 
     Route::post("/createzone", [UserController::class, 'zonesave'])
         ->name("savezone");
+
+    Route::get('branchadmin/create', fn() => Inertia::render('Admin2/CreateStaff'))
+        ->name("createstaff");
+
+    Route::get("branchadmin/createzone", fn() => Inertia::render('Admin2/CreateZone'))
+        ->name('createzone');
 });
 
-// extra branch admin pages
-Route::get('branchadmin/create', fn() => Inertia::render('Admin2/CreateStaff'))
-    ->name("createstaff");
-
-Route::get("branchadmin/createzone", fn() => Inertia::render('Admin2/CreateZone'))
-    ->name('createzone');
 
 
 /*
@@ -155,10 +162,18 @@ Route::get("branchadmin/createzone", fn() => Inertia::render('Admin2/CreateZone'
 | ZONE / AGENT MANAGEMENT
 |--------------------------------------------------------------------------
 */
+
+
 Route::get('available/agents', [ZoneController::class, 'agents']);
 Route::get('available/zones', [ZoneController::class, 'Zones']);
 Route::post('assign/zones', [ZoneController::class, 'assignZones'])->name("assignAgents");
-
+Route::post('deassign/zones', [ZoneController::class, 'deassignZone'])->name("deassignagent");
+Route::get('/bank/users/pending', [UserController::class, 'pending'])
+    ->name('bank.users.pending');
+Route::post('/bank/users/{user}/approve', [UserController::class, 'approve'])
+    ->name('bank.users.approve');
+Route::post('/bank/users/{user}/reject', [UserController::class, 'reject'])
+    ->name('bank.users.reject');
 
 /*
 |--------------------------------------------------------------------------
@@ -174,9 +189,15 @@ Route::get('/loanadmindashboard', [LoanController::class, 'getLoans'])
 | BRANCH USERS MANAGEMENT
 |--------------------------------------------------------------------------
 */
-Route::get('/available/branchusers', [BranchController::class, 'availableusers']);
-Route::get('allbranch/users', fn() => Inertia::render('Admin2/AvailableUsers'))
-    ->name('availableusers');
+Route::middleware("auth")->group(
+    function () {
+        Route::get('/available/branchusers', [BranchController::class, 'availableusers']);
+        Route::get('allbranch/users', fn() => Inertia::render('Admin2/AvailableUsers'))
+            ->name('availableusers');
+        Route::patch('/branch/{user}/status', [BankController::class, 'toggleStatus'])
+            ->name('toggleuserStatus');
+    }
+);
 
 
 /*

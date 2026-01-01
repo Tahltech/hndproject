@@ -58,7 +58,7 @@ export default function Login() {
                     </label>
                     <div className="relative">
                         <Icon
-                            name="users"
+                            name="mail"
                             className={iconClass(errors.email)}
                         />
                         <input
@@ -99,7 +99,7 @@ export default function Login() {
                     disabled={processing}
                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-white shadow hover:opacity-90 transition disabled:opacity-60"
                 >
-                    <Icon name="dashboard" className="w-4 h-4" />
+                    <Icon name="login" className="w-4 h-4" />
                     {processing ? "Logging in..." : "Login"}
                 </button>
 
@@ -121,6 +121,12 @@ export default function Login() {
                         className="font-semibold text-[var(--color-primary)] hover:underline"
                     >
                         Forgot Password?
+                    </Link>
+                     <Link
+                        href={route("home")}
+                        className="font-semibold text-[var(--color-primary)] hover:underline ml-3"
+                    >
+                        Home
                     </Link>
                 </p>
             </form>

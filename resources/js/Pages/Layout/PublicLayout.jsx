@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
 import Toast from "../../Components/Toast";
+import { route } from "ziggy-js";
 
 export default function PublicLayout({ children }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -31,6 +32,9 @@ export default function PublicLayout({ children }) {
 
                     {/* Desktop Navigation */}
                     <nav className="nav-links hidden md:flex items-center gap-6 ">
+                        <Link href={route("home")} className="nav-link ">
+                            Home
+                        </Link>
                         <Link href="/about" className="nav-link">
                             About
                         </Link>
@@ -42,7 +46,7 @@ export default function PublicLayout({ children }) {
                         </Link>
                     </nav>
 
-                {/* the hamburger menu for mobile  */}
+                    {/* the hamburger menu for mobile  */}
                     <div className="flex items-center gap-2 md:gap-4">
                         {/* Get Started button smaller on mobile */}
                         <Link
@@ -95,6 +99,9 @@ export default function PublicLayout({ children }) {
                 {mobileMenuOpen && (
                     <div className="md:hidden bg-[var(--color-surface)] border-t border-[var(--color-border)]">
                         <nav className="flex flex-col p-4 space-y-2">
+                            <Link href={route("home")} className="nav-link ">
+                                Home
+                            </Link>
                             <Link href="/about" className="nav-link">
                                 About
                             </Link>
@@ -140,12 +147,18 @@ export default function PublicLayout({ children }) {
                         </h4>
                         <ul className="space-y-2">
                             <li>
-                                <Link href="/pricing" className="hover:underline">
+                                <Link
+                                    href="/pricing"
+                                    className="hover:underline"
+                                >
                                     Pricing
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/contact" className="hover:underline">
+                                <Link
+                                    href="/contact"
+                                    className="hover:underline"
+                                >
                                     Contact
                                 </Link>
                             </li>
@@ -163,7 +176,10 @@ export default function PublicLayout({ children }) {
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/privacy" className="hover:underline">
+                                <Link
+                                    href="/privacy"
+                                    className="hover:underline"
+                                >
                                     Privacy
                                 </Link>
                             </li>
