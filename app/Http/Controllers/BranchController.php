@@ -16,13 +16,19 @@ use Inertia\Inertia;
 
 class BranchController extends Controller
 {
-    // public function branchAdmin($id)
-    // {
-    //     $branch = Branch::findOrFail($id);
-    //     return inertia('Admin1/CreateBranchAdmin', [
-    //         'branch' => $branch,
-    //     ]);
-    // }
+    public function viewUserInfo($id)
+    {
+        $user = User::with([
+            'bank:bank_id,name',
+            'branch:branch_id,name',
+            'kyc'
+        ])->where('user_id', $id)->firstOrFail();
+
+        return inertia('Admin2/UserKycView', [
+            'user' => $user,
+        ]);
+    }
+
     public function availableBranches($id)
     {
         $branches = Branch::where('bank_id', $id)
@@ -78,27 +84,31 @@ class BranchController extends Controller
 
     public function availableusers(Request $request)
     {
-
         if (!$request->ajax() && !$request->wantsJson()) {
             abort(404);
         }
 
-        $usersBranchId = Auth::user()->branch_id;
+        $branchId = Auth::user()->branch_id;
+        $search = $request->query('search');
+
         $users = DB::table('users')
             ->join('roles', 'roles.role_id', '=', 'users.role_id')
-            ->where('users.branch_id', $usersBranchId)
+            ->where('users.branch_id', $branchId)
             ->where('roles.role_name', 'user')
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('users.full_name', 'like', "%{$search}%")
+                        ->orWhere('users.username', 'like', "%{$search}%")
+                        ->orWhere('users.email', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('users.created_at', 'desc')
             ->select('users.*')
-            ->get();
+            ->paginate(10);
 
-
-        //dd($users);
-
-        return response()->json([
-            'users' => $users,
-
-        ]);
+        return response()->json($users);
     }
+
 
     /**
      * Dashboard: Show all branches for the authenticated bank admin
@@ -214,21 +224,20 @@ class BranchController extends Controller
 
 
 
-public function destroyAdmin(User $user)
-{
-    $authUser = Auth::user();
+    public function destroyAdmin(User $user)
+    {
+        $authUser = Auth::user();
 
-    // Check if the user belongs to the same bank as the authenticated user
-    if ($user->bank_id !== $authUser->bank_id) {
-        abort(403, 'You do not have permission to deactivate this user.');
+        // Check if the user belongs to the same bank as the authenticated user
+        if ($user->bank_id !== $authUser->bank_id) {
+            abort(403, 'You do not have permission to deactivate this user.');
+        }
+
+        // Instead of deleting, set status to 'inactive'
+        $user->update([
+            'status' => 'inactive',
+        ]);
+
+        return redirect()->route('bnkadmindashboard')->with('success', 'User has been deactivated successfully.');
     }
-
-    // Instead of deleting, set status to 'inactive'
-    $user->update([
-        'status' => 'inactive',
-    ]);
-
-    return redirect()->route('bnkadmindashboard')->with('success', 'User has been deactivated successfully.');
-}
-
 }

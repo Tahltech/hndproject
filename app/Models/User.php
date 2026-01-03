@@ -61,15 +61,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(AuditLog::class, 'user_id', 'user_id');
     }
-
+    public function zone()
+    {
+        return $this->belongsTo(Zone::class, 'zone_id', 'zone_id');
+    }
 
     public function role()
     {
         return $this->belongsTo(Role::class, 'role_id', 'role_id');
     }
-    
+
     public function bank()
     {
         return $this->belongsTo(Bank::class, 'bank_id', 'bank_id');
+    }
+    public function kyc()
+    {
+        return $this->hasOne(UserKyc::class, 'user_id', 'user_id');
     }
 }

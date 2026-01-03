@@ -46,7 +46,7 @@ export const navigationByRole = {
             href: route("branchadmindashboard"),
             icon: "dashboard",
         },
-        { label: "Accounts", href: route("availableusers"), icon: "wallet" },
+        { label: "Branch Users", href: route("availableusers"), icon: "users" },
         { label: "Create Staff", href: route("createstaff"), icon: "users" },
         { label: "Create Zone", href: route("createzone"), icon: "map" },
         {
@@ -55,5 +55,12 @@ export const navigationByRole = {
             icon: "users",
         },
         { label: "Settings", href: route("settings"), icon: "settings" },
+    ],
+    loan_officer: [
+        { label: "Dashboard", href: route("loanadmindashboard"), icon: "dashboard"},
+        {label: "Branch Users",  href: route("availableusers"), icon: "users"},
+        {label: "Loan Requests",  href: route("showrequests"), icon: "bell"},
+        { label: "Settings", href: route("settings"), icon: "settings" },
+
     ],
 };

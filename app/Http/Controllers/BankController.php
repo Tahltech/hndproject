@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bank;
+use App\Models\Role;
+use App\Models\User;
 use Inertia\Inertia;
 use App\Models\Branch;
 use Illuminate\Http\Request;
-use App\Models\Role;
 use Illuminate\Support\Facades\DB;
-use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -40,23 +41,12 @@ class BankController extends Controller
 
     public function createAdmin(Request $request, $id)
     {
-        // // find that specific bank
-        // if (!$request->ajax() && !$request->wantsJson()) {
-        //     abort(404);
-        // }
+        
 
         $bank = Bank::findOrFail($id);
         return inertia('Admin/CreateBankAdmin', [
             'bank' => $bank,
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -72,13 +62,26 @@ class BankController extends Controller
 
         ]);
 
-        Bank::create([
-            'name' => $request->name,
-            'address' => $request->address,
-            'contact_number' => $request->contact_number,
-            'email' => $request->email,
+        try {
+            Bank::create([
+                'name' => $request->name,
+                'address' => $request->address,
+                'contact_number' => $request->contact_number,
+                'email' => $request->email,
 
-        ]);
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
 
 
         return redirect()->back()->with("success", "Bank created succcessfully");
@@ -95,15 +98,29 @@ class BankController extends Controller
             'password' => 'required|string|confirmed|min:8',
             'bank_id' => 'required|exists:banks,bank_id',
         ]);
+        try {
+            $user = User::create([
+                'full_name' => $request->full_name,
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'bank_id' => $request->bank_id,
+                'role_id' => 2,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+            ]);
 
-        $user = User::create([
-            'full_name' => $request->full_name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'bank_id' => $request->bank_id,
-            'role_id' => 2, // assuming 2 = Bank Admin role
-        ]);
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
+
+
 
         return redirect()->back()
             ->with('success', 'Bank Admin created successfully!');
@@ -114,15 +131,28 @@ class BankController extends Controller
      */
     public function allAdmins()
     {
-        $admins = User::with(['role', 'bank'])
-            ->whereHas('role', function ($query) {
-                $query->where('role_name', 'overall_admin');
-            })->latest()
-            ->get();
+        try {
+            $admins = User::with(['role', 'bank'])
+                ->whereHas('role', function ($query) {
+                    $query->where('role_name', 'overall_admin');
+                })->latest()
+                ->get();
 
-        return Inertia::render('Admin/BankAdmins', [
-            'bankAdmins' => $admins,
-        ]);
+            return Inertia::render('Admin/BankAdmins', [
+                'bankAdmins' => $admins,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
     }
 
     /**
@@ -131,49 +161,48 @@ class BankController extends Controller
 
     public function toggleStatus(User $user)
     {
-        DB::transaction(function () use ($user) {
 
-            // toggle user status
-            $newStatus = $user->status === 'active' ? 'pending' : 'active';
-           
-            $user->update([
-                'status' => $newStatus,
+        try {
+            DB::transaction(function () use ($user, &$updatedUser) {
+
+
+                $newStatus = $user->status === 'active' ? 'pending' : 'active';
+                $user->update(['status' => $newStatus]);
+
+
+                $updatedUser = $user->fresh();
+
+                // Handle overall_admin role
+                if ($user->role && $user->role->role_name === 'overall_admin' && $user->bank) {
+                    $user->bank->update(['status' => $newStatus]);
+                    $user->bank->users()->update(['status' => $newStatus]);
+                }
+
+                // Handle branch_manager role
+                if ($user->role && $user->role->role_name === 'branch_manager' && $user->branch) {
+                    $user->branch->update(['status' => $newStatus]);
+                    $user->branch->users()->update(['status' => $newStatus]);
+                }
+            });
+        } catch (\Throwable $e) {
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
             ]);
 
-            // check if user is overall admin
-            if (
-                $user->role &&
-                $user->role->role_name === 'overall_admin' &&
-                $user->bank
-            ) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
 
-                $user->bank->update([
-                    'status' => $newStatus,
-                ]);
-
-                // Update ALL users under this bank
-                $user->bank->users()->update([
-                    'status' => $newStatus,
-                ]);
-            }
-            if (
-                $user->role &&
-                $user->role->role_name === 'branch_manager' &&
-                $user->branch
-            ) {
-
-                $user->branch->update([
-                    'status' => $newStatus,
-                ]);
-
-                // Update ALL users under this branch
-                $user->branch->users()->update([
-                    'status' => $newStatus,
-                ]);
-            }
-        });
-
-        return back()->with('success', 'User and bank status updated successfully');
+        
+       return response()->json([
+        'success' => true,
+        "message"=> "user Status updated sucessfully",
+        'user' => $user->fresh(), 
+    ]);
     }
 
     /**

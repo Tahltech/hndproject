@@ -7,13 +7,15 @@ import Select from "react-select";
 import Icon from "@/Components/Icons";
 
 export default function BranchAdminDashboard() {
-    const { authUser } = usePage().props;
+    const { authUser } = usePage();
+    const { props } = usePage();
+    const user = props.auth?.user;
+
     const { data, setData, post, processing } = useForm({
         agent_id: "",
         zone_id: "",
     });
 
-     
     const [agents, setAgents] = useState([]);
     const [zones, setZones] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -80,26 +82,35 @@ export default function BranchAdminDashboard() {
 
             <main className="page space-y-8">
                 {/* ===== Top Right Bar ===== */}
-                <div className="flex justify-end">
-                    <div className="flex items-center gap-6">
-                        {/* Profile / Bank Logo */}
-                        <div className="flex flex-col items-center cursor-pointer group">
-                            <div className="w-12 h-12 rounded-full overflow-hidden bg-[var(--color-primary-light)] flex items-center justify-center group-hover:ring-2 group-hover:ring-[var(--color-primary)] transition">
-                                <img
-                                    src={
-                                        authUser?.bank?.profile_photo
-                                            ? `/storage/bank_logos/${authUser.bank.profile_photo}`
-                                            : "/storage/profile_photos/default-avatar.png"
-                                    }
-                                    alt={authUser?.full_name || "Bank Logo"}
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
-                            <p className="text-xs font-semibold mt-1">
-                                {authUser?.username || "username"}
-                            </p>
+                <div className="flex justify-end items-center gap-4">
+                    {/* Bank Logo + Name */}
+                    <div className="flex flex-col items-center cursor-pointer group">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-[var(--color-primary-light)] flex items-center justify-center group-hover:ring-2 group-hover:ring-[var(--color-primary)] transition">
+                            <img
+                                src={
+                                    user?.bank?.bank_profile
+                                        ? `/storage/bank_logos/${user.bank?.bank_profile}`
+                                        : "/storage/profile_photos/default-avatar.png"
+                                }
+                                alt={user?.bank?.bank_name || "Bank Logo"}
+                                className="w-full h-full object-cover"
+                            />
                         </div>
+                        <p className="text-xs font-semibold mt-1">
+                            {user?.bank?.bank_name || "Bank Name"}
+                        </p>
                     </div>
+
+                    {/* View Branch Staff Button */}
+                    <Link
+                        href={route("branchStaff")} 
+                        className="btn btn-sm btn-primary flex items-center gap-2 px-3 h-8"
+                    >
+                        <Icon name="users" className="w-4 h-4" />
+                        <span className="text-xs font-semibold">
+                            View Staff
+                        </span>
+                    </Link>
                 </div>
 
                 {/* ===== Stats Cards ===== */}
@@ -148,6 +159,7 @@ export default function BranchAdminDashboard() {
                         onSubmit={submitZone}
                         className="flex flex-wrap gap-6 px-6 py-4 items-end"
                     >
+                        {/* Zone select */}
                         <div className="flex flex-col gap-1 min-w-[220px]">
                             <label className="text-xs text-muted">Zone</label>
                             <Select
@@ -173,6 +185,7 @@ export default function BranchAdminDashboard() {
                             />
                         </div>
 
+                        {/* Agent select */}
                         <div className="flex flex-col gap-1 min-w-[220px]">
                             <label className="text-xs text-muted">Agent</label>
                             <Select
@@ -187,46 +200,51 @@ export default function BranchAdminDashboard() {
                             />
                         </div>
 
-                        {/* Assign button */}
+                        {/* Single toggle button */}
                         <button
                             type="submit"
-                            disabled={processing}
-                            className="btn btn-primary disabled:opacity-60"
-                        >
-                            {processing ? "Assigning..." : "Assign Agent"}
-                        </button>
+                            disabled={
+                                processing || !data.zone_id || !data.agent_id
+                            }
+                            className={`btn ${
+                                agents.find(
+                                    (a) =>
+                                        a.user_id === data.agent_id &&
+                                        Number(a.is_assigned) === 1
+                                )
+                                    ? "bg-[var(--color-warning)]" // De-assign color
+                                    : "btn-primary"
+                            } disabled:opacity-60`}
+                            onClick={(e) => {
+                                const selectedAgent = agents.find(
+                                    (a) => a.user_id === data.agent_id
+                                );
 
-                        {/* De-assign button */}
-                        {data.agent_id && (
-                            <button
-                                type="button"
-                                onClick={deassignAgent}
-                                className="btn bg-[var(--color-warning)] "
-                            >
-                                De-assign Agent
-                            </button>
-                        )}
+                                if (
+                                    selectedAgent &&
+                                    Number(selectedAgent.is_assigned) === 1
+                                ) {
+                                    // If agent is already assigned → de-assign
+                                    e.preventDefault(); // prevent normal submit
+                                    deassignAgent();
+                                }
+                            }}
+                        >
+                            {agents.find(
+                                (a) =>
+                                    a.user_id === data.agent_id &&
+                                    Number(a.is_assigned) === 1
+                            )
+                                ? processing
+                                    ? "Processing..."
+                                    : "De-assign Agent"
+                                : processing
+                                ? "Assigning..."
+                                : "Assign Agent"}
+                        </button>
                     </form>
                 </div>
 
-                {/* ===== Quick Actions ===== */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <Link
-                        href={route("createstaff")}
-                        className="btn btn-primary flex justify-between items-center"
-                    >
-                        <p className="font-bold">Create Branch Staff</p>
-                        <Icon name="user-plus" className="w-5 h-5" />
-                    </Link>
-
-                    <Link
-                        href={route("createzone")}
-                        className="btn btn-primary flex justify-between items-center"
-                    >
-                        <p className="font-bold text-white">Create Zone</p>
-                        <Icon name="map-pin" className="w-5 h-5" />
-                    </Link>
-                </div>
             </main>
         </>
     );

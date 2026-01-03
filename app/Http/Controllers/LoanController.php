@@ -109,20 +109,81 @@ class LoanController extends Controller
 
         return redirect()->route("loan.index")->with("success", "Loan requested Succesfully wait  for its approval");
     }
-    public function getLoans()
+    public function showRequests(Request $request)
     {
         $branchId = Auth::user()->branch_id;
 
-        $loans = Loan::whereHas('account.user', function ($query) use ($branchId) {
-            $query->where('branch_id', $branchId);
-        })->with([
-            'account.user',
-        ])->get();
+        // Get search query
+        $search = $request->input('search');
 
-        return inertia('Loan/LoanAdminDashbaord', [
-            'loanRequests' => $loans
+        // Fetch loans for users in this branch
+        $loanQuery = Loan::with(['account.user'])
+            ->whereHas('account.user', function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            })
+            ->orderBy('created_at', 'desc'); // latest first
+
+        // Apply search if provided
+        if ($search) {
+            $loanQuery->whereHas('account.user', function ($q) use ($search) {
+                $q->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        // Paginate results
+        $loans = $loanQuery->paginate(10)->withQueryString();
+
+        // Return to Inertia page
+        return Inertia::render('Loan/LoanRequests', [
+            'loans' => $loans
         ]);
     }
+
+    public function getLoanStats()
+    {
+        $branchId = Auth::user()->branch_id;
+
+        // Get all loans for users in this branch
+        $loans = Loan::whereHas('account.user', function ($query) use ($branchId) {
+            $query->where('branch_id', $branchId);
+        })->with(['account.user'])->get();
+
+        // Compute stats
+        $totalLoanAmount = $loans->sum(fn($loan) => $loan->principal_amount ?? 0);
+        $pending = $loans->where('status', 'pending')->count();
+        $approved = $loans->where('status', 'approved')->count();
+        $totalApproved = $loans
+            ->where('status', 'approved')
+            ->sum(fn($loan) => $loan->principal_amount ?? 0);
+
+        // Monthly stats
+        $monthlyStats = $loans->groupBy(function ($loan) {
+            return Carbon::parse($loan->created_at)->format('M'); // Jan, Feb, etc.
+        })->map(function ($loans, $month) {
+            return [
+                'month' => $month,
+                'total' => $loans->sum(fn($l) => $l->principal_amount ?? 0),
+                'approved' => $loans->where('status', 'approved')->sum(fn($l) => $l->principal_amount ?? 0),
+                'pending' => $loans->where('status', 'pending')->sum(fn($l) => $l->principal_amount ?? 0),
+            ];
+        })->values();
+
+
+        // Return data to Inertia
+        return inertia('Loan/LoanAdminDashbaord', [
+            'loanStats' => [
+                'totalLoan' => $totalLoanAmount,
+                'pending' => $pending,
+                'approved' => $approved,
+                'totalApproved' => $totalApproved,
+            ],
+            'monthlyStats' => $monthlyStats,
+        ]);
+    }
+
+
     public function changeStatus(Request $request, $id)
     {
         $validated = $request->validate([

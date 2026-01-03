@@ -13,6 +13,7 @@ use App\Http\Controllers\{
     LoanController,
     ZoneController,
     SettingsController,
+    BankBranchController
 };
 use App\Http\Controllers\BankAdmin\BankProfileController;
 
@@ -162,27 +163,46 @@ Route::middleware('auth')->prefix('branchadmindashboard')->group(function () {
 | ZONE / AGENT MANAGEMENT
 |--------------------------------------------------------------------------
 */
+Route::middleware(['auth'])->group(function () {
+    // ZONE / AGENT MANAGEMENT
+    Route::get('available/agents', [ZoneController::class, 'agents']);
+    Route::get('available/zones', [ZoneController::class, 'Zones']);
+    Route::post('assign/zones', [ZoneController::class, 'assignZones'])->name("assignAgents");
+    Route::post('deassign/zones', [ZoneController::class, 'deassignZone'])->name("deassignagent");
 
+    // BANK USERS
+    Route::get('/bank/users/pending', [UserController::class, 'pending'])
+        ->name('bank.users.pending');
+    Route::post('/bank/users/{user}/approve', [UserController::class, 'approve'])
+        ->name('bank.users.approve');
+    Route::post('/bank/users/{user}/reject', [UserController::class, 'reject'])
+        ->name('bank.users.reject');
 
-Route::get('available/agents', [ZoneController::class, 'agents']);
-Route::get('available/zones', [ZoneController::class, 'Zones']);
-Route::post('assign/zones', [ZoneController::class, 'assignZones'])->name("assignAgents");
-Route::post('deassign/zones', [ZoneController::class, 'deassignZone'])->name("deassignagent");
-Route::get('/bank/users/pending', [UserController::class, 'pending'])
-    ->name('bank.users.pending');
-Route::post('/bank/users/{user}/approve', [UserController::class, 'approve'])
-    ->name('bank.users.approve');
-Route::post('/bank/users/{user}/reject', [UserController::class, 'reject'])
-    ->name('bank.users.reject');
+    // BRANCH USERS
+    Route::get('/branch/users/view/{user}', [BranchController::class, "viewUserInfo"])->name("branch.users.view");
+
+    // BRANCH STAFF
+    Route::get('/branch/staff', [BankBranchController::class, "branchStaffs"])->name("branchStaff");
+});
 
 /*
 |--------------------------------------------------------------------------
 | LOAN OFFICER ROUTES
 |--------------------------------------------------------------------------
 */
-Route::get('/loanadmindashboard', [LoanController::class, 'getLoans'])
-    ->name('loanadmindashboard');
+Route::middleware(['auth'])->prefix('loanadmindashboard')->group(function () {
 
+    Route::get('/', [LoanController::class, 'getLoanStats'])
+        ->name('loanadmindashboard');
+    Route::get('/requests', [LoanController::class, "showRequests"])->name('showrequests');
+     Route::post("/user/apply", [LoanController::class, 'applyloan'])
+        ->name("loan.apply");
+
+    Route::post("loan/status/{id}", [LoanController::class, "changeStatus"])
+        ->name("changeStatus");
+
+          Route::resource('loan', LoanController::class);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -218,7 +238,7 @@ Route::post("/remove/userszone", [AgentController::class, 'removeuserzone'])
 | ACCOUNTANT ROUTES
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->prefix('accountadmindashboard')->group(function () {
+Route::middleware('auth')->prefix('accountantdmindashboard')->group(function () {
     Route::get('/', fn() => Inertia::render('Admin1/Admindashboard'))
         ->name('accountadmindashboard');
 });
@@ -282,9 +302,5 @@ Route::middleware('auth')->prefix('dashboard')->group(function () {
 
     Route::resource('loan', LoanController::class);
 
-    Route::post("/user/apply", [LoanController::class, 'applyloan'])
-        ->name("loan.apply");
-
-    Route::post("loan/status/{id}", [LoanController::class, "changeStatus"])
-        ->name("changeStatus");
+   
 });

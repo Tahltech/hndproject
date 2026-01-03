@@ -58,6 +58,10 @@ public function share(Request $request): array
                         'name' => $user->role->role_name, // e.g. it_admin
                     ],
 
+                    'bank'=>[
+                        'bank_name'=>$user->bank->name,
+                        'bank_profile'=>$user->bank->profile_photo,
+                    ],
                     'profile_photo' => $user->profile_photo,
                 ]
                 : null,

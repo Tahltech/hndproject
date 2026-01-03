@@ -17,6 +17,10 @@ import {
     MapPinned,
     Phone,
     Mail,
+    CheckCheck,
+    X,
+    Eye,
+    Bell,
 } from "lucide-react";
 
 const icons = {
@@ -37,6 +41,11 @@ const icons = {
     map: MapPinned,
     phone: Phone,
     mail:Mail,
+    check:CheckCheck,
+    x:X,
+    eye:Eye,
+    bell: Bell,
+
 };
 
 export default function Icon({ name, className = "w-5 h-5", ...props }) {

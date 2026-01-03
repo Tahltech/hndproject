@@ -100,16 +100,13 @@
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out;
 }
-
 /* ===============================
    GLOBAL DESIGN TOKENS
 ================================ */
-
 :root {
   /* Brand Colors */
   --color-primary: #3D37FF;
   --color-primary-light: #F7F9FF;
- 
 
   /* Backgrounds */
   --color-background: #F2F5FD;
@@ -128,7 +125,7 @@
   /* Status Colors */
   --color-success: #00C896;
   --color-warning: #F25F52;
-  --color-danger:#FFCA41;
+  --color-danger: #FFCA41;
 
   /* Radius */
   --radius-sm: 6px;
@@ -153,7 +150,6 @@
   --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.6);
 
   --color-primary: #3399FF;
-  /* Slightly brighter for contrast */
   --color-primary-light: #66B2FF;
 
   --color-success: #22c55e;
@@ -179,12 +175,7 @@ body {
   color: var(--color-text-primary);
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   margin: 0;
 }
@@ -192,6 +183,15 @@ h6 {
 p {
   color: var(--color-text-secondary);
   line-height: 1.6;
+}
+
+.app-logo{
+  width: 80px;
+  height: auto;
+}
+
+.brand-accent{
+  color: var(--color-primary)
 }
 
 .text-muted {
@@ -210,20 +210,65 @@ p {
   transition: all 0.2s ease;
 }
 
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+}
+
 .btn-primary {
   background-color: var(--color-primary);
   color: white;
-  
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
 }
 
 .btn-outline {
   background: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
+}
+
+.btn-success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.btn-warning {
+  background-color: var(--color-warning);
+  color: white;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* ===============================
+   BADGES
+================================ */
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge-success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.badge-warning {
+  background-color: var(--color-warning);
+  color: white;
+}
+
+.badge-danger {
+  background-color: var(--color-danger);
+  color: white;
 }
 
 /* ===============================
@@ -235,6 +280,7 @@ p {
   box-shadow: var(--shadow-md);
   padding: 1.2rem;
 }
+
 .input {
   width: 100%;
   padding: 0.65rem 0.75rem;
@@ -250,7 +296,6 @@ p {
   box-shadow: 0 0 0 2px var(--color-primary-light);
 }
 
-
 /* ===============================
    LAYOUT UTILITIES
 ================================ */
@@ -264,180 +309,41 @@ p {
   align-items: center;
 }
 
-.success {
-  color: var(--color-success);
-}
-
-.danger {
-  color: var(--color-danger);
-}
-.warning{
-  color: var(--color-warning)
-}
+.success { color: var(--color-success); }
+.danger { color: var(--color-danger); }
+.warning { color: var(--color-warning); }
 
 /* ===============================
-   BRAND / LOGO STYLING
+   ALERTS
 ================================ */
-.app-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.app-logo {
-  height: 68px;
-  width: auto;
-}
-
-.app-brand-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.app-brand-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  line-height: 1;
-  color: var(--color-text-primary);
-}
-
-.brand-accent {
-  color: var(--color-primary);
-}
-
-.app-brand-tagline {
-  font-size: 0.75rem;
-  font-style: italic;
-  color: var(--color-text-muted);
-}
-
-/* ===============================
-   HEADER / NAV
-================================ */
-.header-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 20px;
-}
-
-.nav-links {
-  display: flex;
-  gap: 24px;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.nav-link {
-  text-decoration: none;
-  color: var(--color-text-primary);
-  transition: color 0.3s ease;
-  font-weight: bold;
-}
-
-.nav-link:hover {
-  color: var(--color-primary);
-  text-decoration: underline;
-}
-
-@media (max-width: 768px) {
-  .header-container {
-    flex-direction: row;
-    gap: 12px;
-  }
-
-  .nav-links {
-    display: none;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .app-brand-title {
-    color: var(--color-text-primary);
-
-  }
-
-  .app-logo {
-    width: 50px;
-    height: auto;
-  }
-
-
-.dashboard-wrapper {
-    padding: 2rem;
-    background: var(--color-background);
-    min-height: 100vh;
-}
-
-/* Header */
-.dashboard-header {
-    margin-bottom: 2rem;
-}
-
-.dashboard-header h1 {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--color-text-primary);
-}
-
-.dashboard-header p {
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-}
-
-/* Card */
-.dashboard-card {
-    background: var(--color-surface);
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid var(--color-primary-light);
-    margin-bottom: 1.5rem;
-}
-
-.card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    color: var(--color-text-primary);
-}
-
-/* Form */
-.assign-form {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.select-control {
-    min-width: 220px;
-}
-
-/* Alerts */
 .alert {
-    padding: 0.8rem 1rem;
-    border-radius: 10px;
-    font-size: 0.85rem;
-    margin-bottom: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
 }
 
 .alert-success {
-    background: #e8f8f0;
-    color: #1e8e5a;
+  background-color: rgba(0, 200, 150, 0.1);
+  color: var(--color-success);
 }
 
 .alert-error {
-    background: #fdecec;
-    color: #c53030;
+  background-color: rgba(255, 202, 65, 0.1);
+  color: var(--color-danger);
 }
 
-/* Actions */
-.dashboard-actions {
-    display: flex;
-    gap: 0.8rem;
-    flex-wrap: wrap;
-}
+/* ===============================
+   RESPONSIVE ADJUSTMENTS
+================================ */
+@media (max-width: 768px) {
+  .card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
 
+  .flex-between {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }
