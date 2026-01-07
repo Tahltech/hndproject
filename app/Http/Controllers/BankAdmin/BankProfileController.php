@@ -102,19 +102,19 @@ class BankProfileController extends Controller
         ]);
 
         $bank = Bank::findOrFail(Auth::user()->bank_id);
-try {
-    
-        $bank->update([
-            
-            'contact_number' => $request->phone,
-            'address' => $request->address,
-        ]);
+        try {
 
-        return back()->with("success", "Bank Contact Details Updated Successfully");
-} catch (\Throwable $th) {
-    //throw $th;
-    return back()->with("error", "Error trying to update Bank Contack Info try Again Later");
-}
+            $bank->update([
+
+                'contact_number' => $request->phone,
+                'address' => $request->address,
+            ]);
+
+            return back()->with("success", "Bank Contact Details Updated Successfully");
+        } catch (\Throwable $th) {
+            //throw $th;
+            return back()->with("error", "Error trying to update Bank Contack Info try Again Later");
+        }
     }
 
     /**
@@ -129,7 +129,8 @@ try {
             'transaction_cutoff_time' => 'nullable|string|max:10',
         ]);
 
-        $bank = Bank::findOrFail(Auth::user()->bank_id);
+     try {
+         $bank = Bank::findOrFail(Auth::user()->bank_id);
 
         $bank->update([
             'currency' => $request->currency,
@@ -137,6 +138,9 @@ try {
             'business_hours' => $request->business_hours,
             'transaction_cutoff_time' => $request->transaction_cutoff_time,
         ]);
+     } catch (\Throwable $th) {
+        //throw $th;
+     }  
 
         return back();
     }

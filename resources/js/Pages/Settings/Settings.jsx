@@ -1,4 +1,4 @@
-import { router, useForm } from "@inertiajs/react";
+import { router, useForm, Head } from "@inertiajs/react";
 import AppLayout from "../Layout/AppLayout";
 import AdminLayout from "../Layout/AdminLayout";
 import CropModal from "../../Components/CropModal";
@@ -84,6 +84,7 @@ export default function SettingsPage({ authUser }) {
 
     return (
         <div className="page max-w-7xl mx-auto space-y-10">
+            <Head title="Settings"/>
             {/* ================= HEADER ================= */}
             <div className="flex items-center space-x-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div className="relative group">

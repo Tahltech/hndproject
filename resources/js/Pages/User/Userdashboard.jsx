@@ -1,156 +1,210 @@
 import React, { useEffect, useState } from "react";
-import { usePage, router, Head, Link } from "@inertiajs/react";
-import { Eye, EyeOff } from "lucide-react";
-//import Layout from "../Layout/Layout";
+import { Head, Link, usePage } from "@inertiajs/react";
+import AppLayout from "../Layout/AppLayout";
 import axios from "axios";
 import Modal from "../../Components/Modal";
 import BalanceForm from "../../Components/BalanceForm";
+import Icon from "../../Components/Icons";
 
 export default function Userdashboard() {
-    const { errors, flash } = usePage().props;
-
+    const { props } = usePage();
+    const user = props.auth?.user;
     const [balance, setBalance] = useState(0);
     const [showBalance, setShowBalance] = useState(false);
     const [transactions, setTransactions] = useState([]);
-    const [latestTransaction, setLatestTransaction] = useState([]);
 
-    // Popup control
     const [showPopup, setShowPopup] = useState(false);
     const [popupType, setPopupType] = useState("add");
 
     useEffect(() => {
         axios
-            .get("/dashboard/account/ballance")
+            .get("/mydashboard/account/ballance")
             .then((response) => {
                 setBalance(response.data.ballance ?? 0);
                 setTransactions(response.data.transactions ?? []);
-                setLatestTransaction(response.data.latestTransaction ?? []);
             })
-            .catch((err) => console.error(err));
+            .catch(console.error);
     }, []);
 
-    const logout = (e) => {
-        e.preventDefault();
-        router.post("/logout");
-    };
+    // Only last 5 transactions
+    const lastFiveTransactions = transactions.slice(0, 5);
 
     return (
-        <main className="p-6">
+        <>
             <Head title="Dashboard" />
-            <h1 className="text-2xl font-bold mb-4">User Dashboard</h1>
-            <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md mx-auto mt-10">
-                <h2 className="text-xl font-semibold mb-6">Main Balance</h2>
 
-                <div className="flex justify-between items-center">
-                    <span className="text-2xl font-bold text-green-600">
-                        XAF {showBalance ? balance : "*****"}
-                    </span>
+            <main className="page space-y-8 w-full">
+                {/* HEADER */}
+                <div>
+                    {/* ================== DASHBOARD HEADER ================== */}
+                    <div className="flex items-center justify-between mb-8">
+                        {/* Profile + Welcome */}
+                        <div className="flex items-center gap-4">
+                            {/* Profile photo */}
+                            <div className="w-16 h-16 rounded-full overflow-hidden bg-[var(--color-primary-light)] flex items-center justify-center group hover:ring-2 hover:ring-[var(--color-primary)] transition">
+                                <img
+                                    src={
+                                        user?.profile_photo_path
+                                            ? `/storage/profile_photos/${user.profile_photo_path}`
+                                            : "/storage/profile_photos/default-avatar.png"
+                                    }
+                                    alt={user?.name || "User Avatar"}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
 
-                    <button
-                        onClick={() => setShowBalance(!showBalance)}
-                        className="text-gray-600 hover:text-black"
-                    >
-                        {showBalance ? <EyeOff /> : <Eye />}
-                    </button>
+                            {/* Welcome message */}
+                            <div className="flex flex-col">
+                                <p className="text-sm text-gray-500">
+                                    Welcome back,
+                                </p>
+                                <h1 className="text-2xl font-semibold text-gray-800">
+                                    {user?.name || "User"}
+                                </h1>
+                            </div>
+                        </div>
+
+                        {/* Optional: Quick action button */}
+                        <Link
+                            href={route("userloanservices")}
+                            className="btn btn-sm btn-primary flex items-center gap-2 px-3 h-10"
+                        >
+                            <Icon name="loan" className="w-4 h-4" />
+                            <span className="text-xs font-semibold">
+                                Loan Services
+                            </span>
+                        </Link>
+                    </div>
+
+                    <p className="text-muted">Overview of your account</p>
                 </div>
 
-                {/* ACTION BUTTONS */}
-                <div className="flex mt-6 gap-4">
-                    {/* ADD BALANCE */}
-                    <button
-                        onClick={() => {
-                            setPopupType("add");
-                            setShowPopup(true);
-                        }}
-                        className="flex-1 bg-green-600 text-white font-medium py-2 px-4 rounded-lg shadow hover:bg-green-700 transition-all duration-200"
-                    >
-                        Add Savings
-                    </button>
+                {/* BALANCE CARD */}
+                <div className="card max-w-md mx-auto text-center">
+                    <p className="text-sm text-muted">Main Balance</p>
 
-                    {/* WITHDRAW BALANCE */}
-                    <button
-                        onClick={() => {
-                            setPopupType("withdraw");
-                            setShowPopup(true);
-                        }}
-                        className="flex-1 bg-red-600 text-white font-medium py-2 px-4 rounded-lg shadow hover:bg-red-700 transition-all duration-200"
-                    >
-                        Withdraw Savings
-                    </button>
+                    <div className="flex justify-center items-center gap-3 mt-3">
+                        <span className="text-3xl font-bold">
+                            XAF{" "}
+                            {showBalance ? balance.toLocaleString() : "*****"}
+                        </span>
+
+                        <button
+                            onClick={() => setShowBalance(!showBalance)}
+                            className="text-muted hover:opacity-80"
+                            aria-label="Toggle balance visibility"
+                        >
+                            <Icon name="eye" className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                        <button
+                            onClick={() => {
+                                setPopupType("add");
+                                setShowPopup(true);
+                            }}
+                            className="btn btn-success flex items-center justify-center gap-2"
+                        >
+                            <Icon name="credit" className="w-5 h-5" />
+                            Add Savings
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setPopupType("withdraw");
+                                setShowPopup(true);
+                            }}
+                            className="btn btn-danger flex items-center justify-center gap-2"
+                        >
+                            <Icon name="debit" className="w-5 h-5" />
+                            Withdraw
+                        </button>
+                    </div>
                 </div>
-            </div>
-            {/* LOGOUT + LOAN BUTTONS */}
-            <div className="flex items-center gap-6 mt-6">
-                <form onSubmit={logout}>
-                    <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                        Logout
-                    </button>
-                </form>
 
-                <Link
-                    href={route("loan.index")}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                    Loan
-                </Link>
-            </div>
-            <Modal show={showPopup} onClose={() => setShowPopup(false)}>
-                <BalanceForm type={popupType === "add" ? "credit" : "debit"} />
-            </Modal>
-            {/* //transaction section */}
-            <section className="bg-white rounded-2xl shadow-lg p-6 mt-8  mx-auto">
-                {/* Section heading */}
-                <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                    Transactions
-                </h3>
+                <section className="card">
+                    <div className="flex-between mb-4">
+                        <h3 className="font-semibold flex items-center gap-2">
+                            <Icon
+                                name="transaction"
+                                className="w-5 h-5 text-muted"
+                            />
+                            Recent Transactions
+                        </h3>
 
-                {/* Transaction list */}
-                <div className="divide-y divide-gray-200">
-                    {transactions?.length > 0 ? (
-                        transactions.map((transaction) => {
-                            const isDeposit =
-                                transaction.type.toLowerCase() === "deposit";
-                            const colorClass = isDeposit
-                                ? "text-blue-600"
-                                : "text-red-600";
-                            const sign = isDeposit ? "+" : "-";
+                        <Link
+                            // href={route("user.transactions")}
+                            className="text-sm brand-accent"
+                        >
+                            View all
+                        </Link>
+                    </div>
 
-                            return (
-                                <div
-                                    key={transaction.transaction_id}
-                                    className="flex justify-between items-center py-2"
-                                >
-                                    {/* Type label */}
-                                    <span className="font-bold text-gray-700">
-                                        {transaction.type
-                                            .charAt(0)
-                                            .toUpperCase() +
-                                            transaction.type.slice(1)}
-                                    </span>
+                    {lastFiveTransactions.length > 0 ? (
+                        <div className="divide-y">
+                            {lastFiveTransactions.map((tx) => {
+                                const isDeposit =
+                                    tx.type.toLowerCase() === "deposit";
 
-                                    <span className="font-bold text-gray-700">
-                                        {transaction.method === "mtn_momo"
-                                            ? "MTN MOMO"
-                                            : "Orange Money"}
-                                    </span>
-                                    {/* Amount with sign and color */}
-                                    <span className={`font-bold ${colorClass}`}>
-                                        {sign}
-                                        {transaction.amount.toLocaleString()}{" "}
-                                        XAF
-                                    </span>
-                                </div>
-                            );
-                        })
+                                return (
+                                    <div
+                                        key={tx.transaction_id}
+                                        className="flex justify-between items-center py-3 text-sm"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Icon
+                                                name={
+                                                    isDeposit
+                                                        ? "credit"
+                                                        : "debit"
+                                                }
+                                                className={`w-5 h-5 ${
+                                                    isDeposit
+                                                        ? "text-green-600"
+                                                        : "text-red-500"
+                                                }`}
+                                            />
+
+                                            <div>
+                                                <p className="font-medium capitalize">
+                                                    {tx.type}
+                                                </p>
+                                                <p className="text-muted text-xs">
+                                                    {tx.method === "mtn_momo"
+                                                        ? "MTN MOMO"
+                                                        : "Orange Money"}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <span
+                                            className={`font-semibold ${
+                                                isDeposit ? "success" : "danger"
+                                            }`}
+                                        >
+                                            {isDeposit ? "+" : "-"}
+                                            {tx.amount.toLocaleString()} XAF
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     ) : (
-                        <p className="text-gray-400 text-center py-4">
+                        <p className="text-muted text-center py-6">
                             No transactions yet
                         </p>
                     )}
-                </div>
-            </section>
-        </main>
+                </section>
+
+                <Modal show={showPopup} onClose={() => setShowPopup(false)}>
+                    <BalanceForm
+                        type={popupType === "add" ? "credit" : "debit"}
+                    />
+                </Modal>
+            </main>
+        </>
     );
 }
 
-//Userdashboard.layout = (page) => <Layout>{page}</Layout>;
+Userdashboard.layout = (page) => <AppLayout>{page}</AppLayout>;

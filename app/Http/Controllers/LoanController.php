@@ -16,54 +16,142 @@ class LoanController extends Controller
 
     public function index()
     {
-        //gets the loans page 
-        return Inertia::render('User/LoanDashboard');
+        
+        return Inertia::render('User/LoanApplication');
+    }
+
+    public function loanStatus()
+    {
+        $user = Auth::user();
+        $account = $user->account;
+
+        if (!$account) {
+            return response()->json([
+                'eligible' => false,
+                'loanLimit' => 0,
+                'activeLoanTotal' => 0,
+                'remainingLimit' => 0,
+                'activeLoans' => [],
+                'message' => 'No account found'
+            ]);
+        }
+
+
+        $activeLoans = Loan::where('account_id', $account->account_id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->get();
+
+        
+        $activeLoanTotal = $activeLoans->sum('principal_amount');
+
+
+        $monthlyDeposits = $account->transactions()
+            ->where('type', 'deposit')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->sum('amount');
+
+        $balanceLimit = $account->balance * 2;
+        $depositLimit = $monthlyDeposits * 2;
+
+        $loanLimit = max($balanceLimit, $depositLimit);
+        $remainingLimit = max($loanLimit - $activeLoanTotal, 0);
+
+
+        $eligible = $remainingLimit >= 1000;
+       
+        return response()->json([
+            'eligible' => true,
+            'loanLimit' => $loanLimit,
+            'activeLoanTotal' => $activeLoanTotal,
+            'remainingLimit' => $remainingLimit,
+            'activeLoans' => $activeLoans->map(fn($loan) => [
+                'amount' => $loan->principal_amount,
+                'status' => $loan->status,
+                'duration' => $loan->repayment_period,
+            ]),
+            'message' => $eligible
+                ? 'You are eligible for a loan'
+                : 'Loan limit already reached'
+        ]);
+    }
+
+    private function generateRepaymentSchedule(Loan $loan)
+    {
+        $monthlyAmount =
+            ($loan->principal_amount +
+                ($loan->principal_amount * $loan->interest_rate / 100))
+            / $loan->repayment_period;
+
+        for ($i = 1; $i <= $loan->repayment_period; $i++) {
+            $loan->repayments()->create([
+                'amount_due' => round($monthlyAmount, 2),
+                'due_date' => Carbon::now()->addMonths($i),
+            ]);
+        }
     }
     public function store(Request $request)
     {
-
         $request->validate([
-            'amount' => "required||numeric",
+            'amount' => 'required|numeric|min:1000',
         ]);
 
-
-
-        $amount = $request->amount;
-        if ($amount < 1000) {
-            return redirect()->route("loan.index")->with("error", "amount can not be less than 1000");
-        }
-
         $user = Auth::user();
-        $userId = $user->user_id;
-        $account = Account::where("user_id", $userId)->first();
-        $balance = $account ? $account->balance : 0;
+        $account = Account::where('user_id', $user->user_id)->first();
 
-        $userCreationDate = $user->created_at;
-        $monthsSpent = Carbon::parse($userCreationDate)->diffInMonths(Carbon::now());
-
-
-        if ($balance > 5000) {
-
-            if ($amount < $balance) {
-                $account->balance = $account->balance + $amount;
-                $account->save();
-
-                Loan::create([
-                    "account_id" => $account->account_id,
-                    "principal_amount" => $amount,
-                    "interest_rate" => "10",
-                    "repayment_period" => "2",
-                    "status" => "pending",
-                ]);
-
-                return redirect()->route("loan.index")->with("success", "Loan requested Succesfully wait a minute for its approval");
-            }
-
-            return Inertia::render("Loan/LoanApplication");
-        } else {
-            return redirect()->route("loan.index")->with("error", "Sorry you are not eligeable for this loan, try again Later");
+        if (!$account) {
+            return redirect()->back()->with('error', 'Account not found');
         }
+
+        $requestedAmount = $request->amount;
+
+        // ================= ACTIVE LOANS =================
+        $activeLoans = Loan::where('account_id', $account->account_id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->get();
+
+        $activeLoanTotal = $activeLoans->sum('principal_amount');
+
+        // ================= LOAN LIMIT =================
+        $monthlyDeposits = $account->transactions()
+            ->where('type', 'deposit')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->sum('amount');
+
+        $balanceLimit = $account->balance * 2;
+        $depositLimit = $monthlyDeposits * 2;
+
+        $loanLimit = max($balanceLimit, $depositLimit);
+        $remainingLimit = $loanLimit - $activeLoanTotal;
+
+        // ================= VALIDATIONS =================
+        if ($remainingLimit < 1000) {
+            return redirect()->back()->with(
+                'error',
+                'Loan limit already reached. Active loans: ' . number_format($activeLoanTotal) . ' XAF'
+            );
+        }
+
+        if ($requestedAmount > $remainingLimit) {
+            return redirect()->back()->with(
+                'error',
+                'Requested amount exceeds your remaining loan limit (' .
+                    number_format($remainingLimit) . ' XAF)'
+            );
+        }
+
+        // ================= CREATE LOAN =================
+        Loan::create([
+            'account_id' => $account->account_id,
+            'principal_amount' => $requestedAmount,
+            'interest_rate' => 10,
+            'repayment_period' => 2,
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('loan.index')
+            ->with('success', 'Loan request submitted successfully');
     }
+
     public function applyloan(Request $request)
     {
 
@@ -195,9 +283,16 @@ class LoanController extends Controller
         if ($loan->status === "approved") {
             return back()->with('success', 'Loan already approved');
         }
+        try {
 
-        $loan->status = $validated["status"];
-        $loan->save();
+            $loan->status = $validated["status"];
+            $loan->save();
+            $this->generateRepaymentSchedule($loan);
+        } catch (\Throwable $th) {
+            //throw $th;
+
+            return back()->with('error', 'Error trying to proccess this loan Try agian later');
+        }
 
         return back()->with('success', "Loan {$validated['status']} successfully");
     }
@@ -205,10 +300,13 @@ class LoanController extends Controller
 
     public function show($id)
     {
+        $loan = Loan::with([
+            'account.user',
+            'repayments'
+        ])->where('loan_id', $id)->firstOrFail();
 
-        $loan = Loan::with('account.user')->findOrFail($id);
-
-
-        return Inertia::render("Loan/LoanDetails", ['loan' => $loan]);
+        return inertia('Loan/LoanDetails', [
+            'loan' => $loan
+        ]);
     }
 }

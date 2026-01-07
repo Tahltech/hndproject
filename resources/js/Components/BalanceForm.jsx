@@ -1,5 +1,5 @@
 import React from "react";
-import { useForm, usePage } from "@inertiajs/react";
+import { useForm } from "@inertiajs/react";
 import { route } from "ziggy-js";
 
 export default function BalanceForm({ type }) {
@@ -16,51 +16,72 @@ export default function BalanceForm({ type }) {
     };
 
     return (
-        <form onSubmit={submit} className="flex flex-col gap-4 mt-14">
-            <h2 className="text-xl font-bold mb-2">
+        <form
+            onSubmit={submit}
+            className="bg-[var(--color-surface)] p-6 md:p-8 rounded-2xl shadow-md max-w-md mx-auto mt-14 flex flex-col gap-5"
+        >
+            <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
                 {type === "credit" ? "Add Balance" : "Withdraw Balance"}
             </h2>
 
-            <label className="font-medium">Method</label>
-            <select
-                value={data.method}
-                onChange={(e) => setData("method", e.target.value)}
-                className="p-2 border rounded bg-white"
-            >
-                <option value="">Choose Payment Method</option>
-                <option value="MobileMoney">Mobile Money</option>
-                <option value="OrangeMoney">Orange Money</option>
-            </select>
+            {/* Payment Method */}
+            <div className="flex flex-col gap-1">
+                <label className="font-medium text-[var(--color-text-secondary)]">
+                    Method
+                </label>
+                <select
+                    value={data.method}
+                    onChange={(e) => setData("method", e.target.value)}
+                    className="input h-10"
+                >
+                    <option value="">Choose Payment Method</option>
+                    <option value="MobileMoney">Mobile Money</option>
+                    <option value="OrangeMoney">Orange Money</option>
+                </select>
+            </div>
 
-            <label className="font-medium">Mobile Number</label>
-            <div className="flex border rounded overflow-hidden">
-                <span className="px-3 bg-gray-200 text-gray-700">+237</span>
+            {/* Mobile Number */}
+            <div className="flex flex-col gap-1">
+                <label className="font-medium text-[var(--color-text-secondary)]">
+                    Mobile Number
+                </label>
+
+                <div className="flex items-center border rounded input h-10 overflow-hidden">
+                    {/* Prefix */}
+                    <span className="px-3 bg-transparent text-[var(--color-text-primary)] flex items-center justify-center h-full">
+                        +237
+                    </span>
+
+                    {/* Input */}
+                    <input
+                        type="tel"
+                        placeholder="6XXXXXXXX"
+                        value={data.mobileNumber}
+                        onChange={(e) => setData("mobileNumber", e.target.value)}
+                        className="flex-1 h-full p-2 outline-none"
+                    />
+                </div>
+            </div>
+
+            {/* Amount */}
+            <div className="flex flex-col gap-1">
+                <label className="font-medium text-[var(--color-text-secondary)]">
+                    Amount (XAF)
+                </label>
                 <input
                     type="number"
-                    placeholder="6XXXXXXXX"
-                    value={data.mobileNumber}
-                    onChange={(e) => setData("mobileNumber", e.target.value)}
-                    className="p-2 flex-1 outline-none"
+                    placeholder="Enter amount"
+                    value={data.amount}
+                    onChange={(e) => setData("amount", e.target.value)}
+                    className="input h-10"
                 />
             </div>
 
-            <label className="font-medium">Amount (XAF)</label>
-            <input
-                type="number"
-                placeholder="Enter amount"
-                value={data.amount}
-                onChange={(e) => setData("amount", e.target.value)}
-                className="p-2 border rounded"
-            />
-
+            {/* Submit Button */}
             <button
                 type="submit"
                 disabled={processing}
-                className={`py-2 rounded text-white transition ${
-                    type === "credit"
-                        ? "bg-green-600 hover:bg-green-700"
-                        : "bg-red-600 hover:bg-red-700"
-                }`}
+                className={`btn ${type === "credit" ? "btn-success" : "btn-danger"} w-full mt-3 h-10`}
             >
                 {processing
                     ? "Processing..."
@@ -68,8 +89,6 @@ export default function BalanceForm({ type }) {
                     ? "Add Balance"
                     : "Withdraw"}
             </button>
-
-           
         </form>
     );
 }

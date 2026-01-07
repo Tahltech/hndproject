@@ -21,6 +21,9 @@ import {
     X,
     Eye,
     Bell,
+    ArrowLeftRight,
+    EyeOffIcon,
+    FileUser,
 } from "lucide-react";
 
 const icons = {
@@ -45,6 +48,10 @@ const icons = {
     x:X,
     eye:Eye,
     bell: Bell,
+    transaction: ArrowLeftRight,
+    loan:HandCoins,
+    eyeoff: EyeOffIcon,
+    files: FileUser,
 
 };
 

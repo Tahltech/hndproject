@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\{
+    AccountantCOntroller,
     AgentController,
     BallanceController,
     BankController,
@@ -13,7 +14,10 @@ use App\Http\Controllers\{
     LoanController,
     ZoneController,
     SettingsController,
-    BankBranchController
+    BankBranchController,
+    LoanRepayController,
+    TransactionController,
+    UserKycController
 };
 use App\Http\Controllers\BankAdmin\BankProfileController;
 
@@ -183,7 +187,16 @@ Route::middleware(['auth'])->group(function () {
 
     // BRANCH STAFF
     Route::get('/branch/staff', [BankBranchController::class, "branchStaffs"])->name("branchStaff");
+    Route::get('/branch/loaninfo',  [AccountantCOntroller::class, "LoanInfo"])->name('branchloaninfo');
+    Route::get('/accountant/transactions/search', [AccountantCOntroller::class, 'search'])
+        ->name('account.search');
+    Route::get('/accountant/transactions/create', [TransactionController::class, 'create'])
+        ->name('transactions.create');
+
+    Route::post('/accountant/transactions', [TransactionController::class, 'store'])
+        ->name('accountant.transactions.store');
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -195,13 +208,12 @@ Route::middleware(['auth'])->prefix('loanadmindashboard')->group(function () {
     Route::get('/', [LoanController::class, 'getLoanStats'])
         ->name('loanadmindashboard');
     Route::get('/requests', [LoanController::class, "showRequests"])->name('showrequests');
-     Route::post("/user/apply", [LoanController::class, 'applyloan'])
-        ->name("loan.apply");
+
 
     Route::post("loan/status/{id}", [LoanController::class, "changeStatus"])
         ->name("changeStatus");
 
-          Route::resource('loan', LoanController::class);
+    Route::resource('loan', LoanController::class);
 });
 
 /*
@@ -239,8 +251,18 @@ Route::post("/remove/userszone", [AgentController::class, 'removeuserzone'])
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->prefix('accountantdmindashboard')->group(function () {
-    Route::get('/', fn() => Inertia::render('Admin1/Admindashboard'))
-        ->name('accountadmindashboard');
+    Route::get('/',  [AccountantCOntroller::class, "getDashboard"])->name('accountadmindashboard');
+    Route::get('/repayments', [AccountantController::class, 'repayments'])
+        ->name('loan.repayments');
+
+    Route::get(
+        '/loans/{loan}/repayments',
+        [AccountantController::class, 'repaymentHistory']
+    )->name('repayments.history');
+
+
+    Route::get('/transactions', [AccountantController::class, 'transactions'])
+        ->name('accountant.transactions');
 });
 
 
@@ -250,8 +272,7 @@ Route::middleware('auth')->prefix('accountantdmindashboard')->group(function () 
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->prefix('supportadmindashboard')->group(function () {
-    Route::get('/', fn() => Inertia::render('Admin1/Admindashboard'))
-        ->name('supportadmindashboard');
+    Route::get('/', [AccountantCOntroller::class, "getDashboard"])->name('supportadmindashboard');
 });
 
 
@@ -270,7 +291,7 @@ Route::get('agentadmindashboard', fn() => Inertia::render('Agent/Agentdashboard'
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'check_permission:view_dashboard_user'])
-    ->prefix('dashboard')
+    ->prefix('mydashboard')
     ->group(function () {
 
         Route::get('/', fn() => Inertia::render('User/Userdashboard'))
@@ -279,8 +300,22 @@ Route::middleware(['auth', 'check_permission:view_dashboard_user'])
         Route::get('account/ballance', [BallanceController::class, 'getBalance'])
             ->middleware('ajax.only');
 
+        Route::get("/transactions", fn() => Inertia::render("User/UserTransactions"))->name("getransaction");
+
         Route::post('/addballance', [BallanceController::class, 'addballance'])
             ->name("newballance");
+        Route::get("/loan-status", [LoanController::class, "loanStatus"]);
+        Route::get("/loandashboard", fn() => Inertia::render("User/LoanDashboard"))->name("userloanservices");
+        Route::get('/loan-repayments', [LoanRepayController::class, 'repaymentHistory']);
+
+        Route::get("/loan-repaymentpage", fn() => Inertia::render("User/LoanRepayment"))->name("loanrepayment");
+        Route::post("/user/apply", [LoanController::class, 'applyloan'])
+            ->name("loan.apply");
+        Route::get("/getloanapplication", [LoanController::class, "index"])->name("getloanapplication");
+        Route::post('/kyc/submit', [UserKycController::class, 'submit'])
+            ->name('kyc.submit');
+        Route::get("/yourkyc", [UserKycController::class, "MyKyc"])->name("userkycpage");
+        Route::resource('loan', LoanController::class);
     });
 
 
@@ -291,16 +326,3 @@ Route::middleware(['auth', 'check_permission:view_dashboard_user'])
 */
 Route::post('/branchadmin/createstaff', [UserController::class, 'storeStaff'])
     ->name("branch_staff");
-
-
-/*
-|--------------------------------------------------------------------------
-| LOAN ROUTES (USER + ADMIN)
-|--------------------------------------------------------------------------
-*/
-Route::middleware('auth')->prefix('dashboard')->group(function () {
-
-    Route::resource('loan', LoanController::class);
-
-   
-});

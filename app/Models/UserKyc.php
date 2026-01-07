@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserKyc extends Model
 {
+
+     protected $primaryKey = 'kyc_id';
+
     protected $fillable = [
         'user_id',
         'passport_photo',
@@ -20,7 +23,7 @@ class UserKyc extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 
     public function reviewer()

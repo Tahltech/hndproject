@@ -1,5 +1,5 @@
 import { route } from "ziggy-js";
-import { Link, useForm, usePage } from "@inertiajs/react";
+import { Link, useForm, usePage, Head } from "@inertiajs/react";
 import AdminLayout from "@/Pages/Layout/AdminLayout";
 import Icon from "@/Components/Icons";
 import {
@@ -19,6 +19,7 @@ export default function LoanAdminDashboard({ loanStats, monthlyStats }) {
     return (
         <main className="page space-y-6">
             <div className="flex justify-end items-center gap-4">
+                <Head  title="Loan Admin Dashboard " />
                 {/* Bank Logo + Name */}
                 <div className="flex flex-col items-center cursor-pointer group">
                     <div className="w-12 h-12 rounded-full overflow-hidden bg-[var(--color-primary-light)] flex items-center justify-center group-hover:ring-2 group-hover:ring-[var(--color-primary)] transition">

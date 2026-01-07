@@ -1,7 +1,6 @@
 import React from "react";
 import { route } from "ziggy-js";
 import { useForm, Head, Link } from "@inertiajs/react";
-import AlertMessage from "../../Components/AlertMessage";
 import AdminLayout from "../Layout/AdminLayout";
 
 export default function LoanDetails({ loan }) {
@@ -44,7 +43,6 @@ export default function LoanDetails({ loan }) {
           </span>
         </div>
 
-        <AlertMessage />
 
         {/* Loan Info */}
         <section className="card p-6 space-y-4">
@@ -137,6 +135,59 @@ export default function LoanDetails({ loan }) {
           ← Back to Loan Requests
         </Link>
       </div>
+      {/* Repayment Schedule */}
+<section className="card p-6 space-y-4">
+  <h2 className="section-title">Repayment Schedule</h2>
+
+  {loan.repayments?.length === 0 ? (
+    <p className="text-muted">No repayments generated yet</p>
+  ) : (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border-collapse">
+        <thead className="bg-[var(--color-primary)] text-white">
+          <tr>
+            <th className="px-3 py-2">#</th>
+            <th className="px-3 py-2">Due Date</th>
+            <th className="px-3 py-2">Amount Due</th>
+            <th className="px-3 py-2">Amount Paid</th>
+            <th className="px-3 py-2">Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {loan.repayments.map((repayment, index) => (
+            <tr key={repayment.id} className="border-b">
+              <td className="px-3 py-2">{index + 1}</td>
+              <td className="px-3 py-2">
+                {new Date(repayment.due_date).toLocaleDateString()}
+              </td>
+              <td className="px-3 py-2">
+                XAF {repayment.amount_due}
+              </td>
+              <td className="px-3 py-2">
+                XAF {repayment.amount_paid}
+              </td>
+              <td className="px-3 py-2">
+                <span
+                  className={`px-2 py-1 rounded text-xs ${
+                    repayment.status === "paid"
+                      ? "bg-[var(--color-success-light)] text-[var(--color-success)]"
+                      : repayment.status === "overdue"
+                      ? "bg-[var(--color-danger-light)] text-[var(--color-danger)]"
+                      : "bg-[var(--color-warning-light)] text-[var(--color-warning)]"
+                  }`}
+                >
+                  {repayment.status}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</section>
+
     </>
   );
 }

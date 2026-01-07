@@ -15,8 +15,13 @@ return new class extends Migration
             $table->bigIncrements('repayment_id');
             $table->unsignedBigInteger('loan_id');
             $table->unsignedBigInteger('transaction_id');
-            $table->decimal('amount',12,2);
+            $table->decimal('amount', 12, 2);
             $table->timestamp('paid_on');
+            $table->decimal('amount_due', 12, 2);
+            $table->string('payment_method')->nullable();
+            $table->date('due_date');
+            $table->enum('status', ['pending', 'paid', 'overdue'])->default('pending');
+
             $table->foreign('loan_id')->references('loan_id')->on('loans')->onDelete('cascade');
             $table->foreign('transaction_id')->references('transaction_id')->on('transactions')->onDelete('cascade');
             $table->timestamps();

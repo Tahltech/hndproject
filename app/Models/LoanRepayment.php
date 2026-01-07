@@ -12,7 +12,7 @@ class LoanRepayment extends Model
 
     protected $primaryKey = 'repayment_id';
 
-    protected $fillable = ['loan_id', 'transaction_id', 'amount', 'paid_on'];
+    protected $fillable = ['loan_id', 'transaction_id', 'amount', 'amount_due', 'due_date', 'repayment_method','status'];
 
     public function loan(): BelongsTo
     {

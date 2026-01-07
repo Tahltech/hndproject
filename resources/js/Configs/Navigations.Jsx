@@ -60,7 +60,22 @@ export const navigationByRole = {
         { label: "Dashboard", href: route("loanadmindashboard"), icon: "dashboard"},
         {label: "Branch Users",  href: route("availableusers"), icon: "users"},
         {label: "Loan Requests",  href: route("showrequests"), icon: "bell"},
+         {
+            label: "Pending Users",
+            href: route("bank.users.pending"),
+            icon: "users",
+        },
         { label: "Settings", href: route("settings"), icon: "settings" },
+    ],
 
+    accountant: [
+        {label: "Dashboard", href: route("accountadmindashboard"), icon: "dashboard"},
+        {label: "Branch Users",  href: route("availableusers"), icon: "users"},
+        {label: "Loan Repayment", href: route("loan.repayments"), icon: "bell"},
+    {label: "Transactions", href: route("accountant.transactions"),icon: "bell"},
+      {label: "Make Transactions", href: route("transactions.create"),icon: "transaction"},
+    
+         { label: "Settings", href: route("settings"), icon: "settings" },
+         
     ],
 };

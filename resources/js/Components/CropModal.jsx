@@ -1,20 +1,47 @@
-import React, { useState } from "react";
+// Components/CropModal.jsx
+import React, { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
+import Modal from "./Modal";
 import { getCroppedImg } from "../Utils/CropImage";
 
-export default function CropModal({ imageSrc, onClose, onCropComplete }) {
+export default function CropModal({
+    isOpen,
+    onClose,
+    imageSrc,
+    onCropComplete,
+}) {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
-    return (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
-            <div className="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
-                <h3 className="text-lg font-semibold text-gray-700">
-                    Crop Profile Photo
-                </h3>
+    const handleCropComplete = useCallback((_, croppedAreaPx) => {
+        setCroppedAreaPixels(croppedAreaPx);
+    }, []);
 
-                <div className="relative w-full h-64 bg-gray-200 rounded-lg overflow-hidden">
+    const handleConfirm = async () => {
+        try {
+            const croppedFile = await getCroppedImg(
+                imageSrc,
+                croppedAreaPixels
+            );
+            onCropComplete(croppedFile);
+            onClose();
+        } catch (err) {
+            console.error("Crop failed:", err);
+            alert("Failed to crop image. Please try again.");
+        }
+    };
+
+    if (!isOpen || !imageSrc) return null;
+
+    return (
+        <Modal show={isOpen} onClose={onClose}>
+            <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-center">
+                    Crop Document
+                </h2>
+
+                <div className="relative w-full h-80 bg-gray-100 rounded-xl overflow-hidden">
                     <Cropper
                         image={imageSrc}
                         crop={crop}
@@ -22,51 +49,37 @@ export default function CropModal({ imageSrc, onClose, onCropComplete }) {
                         aspect={1}
                         onCropChange={setCrop}
                         onZoomChange={setZoom}
-                        onCropComplete={(_, croppedPixels) =>
-                            setCroppedAreaPixels(croppedPixels)
-                        }
+                        onCropComplete={handleCropComplete}
                     />
                 </div>
 
-                <input
-                    type="range"
-                    min={1}
-                    max={3}
-                    step={0.1}
-                    value={zoom}
-                    onChange={(e) => setZoom(e.target.value)}
-                    className="w-full"
-                />
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm">Zoom</label>
+                        <input
+                            type="range"
+                            min={1}
+                            max={3}
+                            step={0.01}
+                            value={zoom}
+                            onChange={(e) => setZoom(Number(e.target.value))}
+                        />
+                    </div>
 
-                <div className="flex justify-end gap-3">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                    >
-                        Cancel
-                    </button>
-
-                    <button
-                        onClick={async () => {
-                            const croppedBlob = await getCroppedImg(
-                                imageSrc,
-                                croppedAreaPixels
-                            );
-                            
-                            const croppedFile = new File(
-                                [croppedBlob],
-                                "profile_photo.png",
-                                { type: "image/png" }
-                            );
-                            
-                            onCropComplete(croppedFile);
-                        }}
-                        className="px-4 py-2 rounded bg-[#3D37FF] text-white hover:bg-blue-700"
-                    >
-                        Save
-                    </button>
+                    <div className="flex gap-2">
+                        <button className="btn btn-outline" onClick={onClose}>
+                            Cancel
+                        </button>
+                        <button
+                            className="btn btn-primary"
+                            type="button"
+                            onClick={handleConfirm}
+                        >
+                            Confirm
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 }

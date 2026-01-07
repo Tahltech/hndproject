@@ -1,59 +1,209 @@
-import { useForm,Head } from "@inertiajs/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Head, Link } from "@inertiajs/react";
+import axios from "axios";
+import AppLayout from "../Layout/AppLayout";
+import Modal from "../../Components/Modal";
 import { route } from "ziggy-js";
-import Alertmessage from "../../Components/AlertMessage";
 
-export default function Loanpage() {
+export default function LoanDashboard() {
+    const [loanInfo, setLoanInfo] = useState({
+        eligible: false,
+        loanLimit: 0,
+        activeLoanTotal: 0,
+        remainingLimit: 0,
+        activeLoans: [],
+        message: "",
+    });
 
-const {post, error, setData, data}= useForm({
-    amount: "",
-})
+    const [showQuickLoanModal, setShowQuickLoanModal] = useState(false);
+    const [quickLoanProcessing, setQuickLoanProcessing] = useState(false);
+    const [quickLoanResult, setQuickLoanResult] = useState(null);
+    const [quickLoanAmount, setQuickLoanAmount] = useState("");
 
-const submitCheckballance = (e)=>{
-    e.preventDefault()
-    post(route("loan.store"))
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchLoanInfo();
+    }, []);
+
+    const fetchLoanInfo = () => {
+        setLoading(true);
+        axios
+            .get("/mydashboard/loan-status")
+            .then((res) => setLoanInfo(res.data))
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    };
+
+    const handleQuickLoan = async () => {
+        if (!quickLoanAmount || parseFloat(quickLoanAmount) <= 0) {
+            alert("Please enter a valid loan amount");
+            return;
+        }
+
+        setQuickLoanProcessing(true);
+        setQuickLoanResult(null);
+
+        try {
+            const res = await axios.post("/quick-loan/grant", {
+                amount: quickLoanAmount,
+            });
+            setQuickLoanResult(res.data);
+
+            if (res.data.success) {
+                fetchLoanInfo(); // refresh dashboard
+            }
+        } catch (err) {
+            setQuickLoanResult({
+                success: false,
+                message: err.response?.data?.message || "Error processing quick loan",
+            });
+        } finally {
+            setQuickLoanProcessing(false);
+        }
+    };
+
+    return (
+        <>
+            <Head title="Loans" />
+
+            <div className="flex-between mb-6">
+                <h1 className="text-2xl font-semibold">Loan Dashboard</h1>
+
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setShowQuickLoanModal(true)}
+                        className="btn btn-primary btn-sm"
+                    >
+                        Quick Loan
+                    </button>
+
+                    <Link
+                        href={route("getloanapplication")}
+                        className={`btn btn-sm ${
+                            loanInfo.eligible
+                                ? "btn-outline"
+                                : "btn-outline opacity-60 pointer-events-none"
+                        }`}
+                    >
+                        Full Loan Application
+                    </Link>
+                </div>
+            </div>
+
+            {loading ? (
+                <p className="text-center text-muted">Loading loan data...</p>
+            ) : (
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div className="card text-center">
+                            <p className="text-sm text-muted">Eligibility</p>
+                            <p className={`text-lg font-semibold ${loanInfo.eligible ? "success" : "danger"}`}>
+                                {loanInfo.eligible ? "Eligible" : "Not Eligible"}
+                            </p>
+                        </div>
+
+                        <div className="card text-center">
+                            <p className="text-sm text-muted">Loan Limit</p>
+                            <p className="text-lg font-semibold brand-accent">
+                                {loanInfo.loanLimit.toLocaleString()} XAF
+                            </p>
+                        </div>
+
+                        <div className="card text-center">
+                            <p className="text-sm text-muted">Active Loans Total</p>
+                            <p className="text-lg font-semibold danger">
+                                {loanInfo.activeLoanTotal.toLocaleString()} XAF
+                            </p>
+                        </div>
+
+                        <div className="card text-center">
+                            <p className="text-sm text-muted">Remaining Capacity</p>
+                            <p className="text-lg font-semibold success">
+                                {loanInfo.remainingLimit.toLocaleString()} XAF
+                            </p>
+                        </div>
+                    </div>
+
+                    {loanInfo.message && (
+                        <div className={`alert ${loanInfo.eligible ? "alert-success" : "alert-error"}`}>
+                            {loanInfo.message}
+                        </div>
+                    )}
+
+                    <section className="card mb-6">
+                        <h2 className="text-lg font-semibold mb-3">Active Loans</h2>
+
+                        {loanInfo.activeLoans.length > 0 ? (
+                            <div className="space-y-3">
+                                {loanInfo.activeLoans.map((loan, index) => (
+                                    <div key={index} className="flex-between border-b pb-2 last:border-none">
+                                        <div>
+                                            <p className="font-medium">{loan.amount.toLocaleString()} XAF</p>
+                                            <p className="text-sm text-muted">
+                                                Status: <span className="badge badge-success">{loan.status}</span>
+                                            </p>
+                                        </div>
+                                        <span className="text-sm text-muted">{loan.duration} months</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-muted text-center py-4">You have no active loans</p>
+                        )}
+                    </section>
+
+                    {/* Quick Loan Modal */}
+                    <Modal
+                        show={showQuickLoanModal}
+                        onClose={() => {
+                            setShowQuickLoanModal(false);
+                            setQuickLoanResult(null);
+                            setQuickLoanAmount("");
+                        }}
+                    >
+                        <div className="p-6 max-w-md text-center">
+                            <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-4">
+                                Quick Loan Request
+                            </h3>
+
+                            <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                                Enter the amount you wish to request. The backend will immediately check your eligibility and grant the loan if you qualify.
+                            </p>
+
+                            <input
+                                type="number"
+                                placeholder="Enter loan amount"
+                                value={quickLoanAmount}
+                                onChange={(e) => setQuickLoanAmount(e.target.value)}
+                                className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 mb-4 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]"
+                            />
+
+                            <button
+                                onClick={handleQuickLoan}
+                                disabled={quickLoanProcessing}
+                                className="w-full btn btn-primary text-white font-bold py-2 rounded-lg"
+                            >
+                                {quickLoanProcessing ? "Processing..." : "Request Quick Loan"}
+                            </button>
+
+                            {quickLoanResult && (
+                                <div
+                                    className={`mt-4 p-3 rounded-lg text-center ${
+                                        quickLoanResult.success
+                                            ? "bg-success/20 text-success"
+                                            : "bg-danger/20 text-danger"
+                                    }`}
+                                >
+                                    {quickLoanResult.message}
+                                </div>
+                            )}
+                        </div>
+                    </Modal>
+                </>
+            )}
+        </>
+    );
 }
-  return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <Head title="Loan"/>
-       
 
-      <div className="w-full max-w-md bg-white shadow-lg rounded-xl p-6">
-        
-        {/* Header */}
-         <Alertmessage />
-        <h2 className="text-2xl font-bold text-center text-blue-600 mb-5">
-          Loan Checker
-        </h2>
-
-        <p className="text-center text-gray-600 mb-8">
-          Enter an amount to check your loan eligibility
-        </p>
-
-        
-        <form className="space-y-5" onSubmit={submitCheckballance}>
-          <div>
-            <label htmlFor="amount" className="block text-gray-700 font-medium mb-1">
-              Amount
-            </label>
-            <input
-              type="number"
-              id="amount"
-              value={data.amount}
-              onChange={(e) => setData("amount",e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring focus:ring-blue-200 transition"
-              placeholder="Enter loan amount"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all disabled:opacity-60"
-          >
-            Check Eligibility
-          </button>
-        </form>
-      </div>
-    </main>
-  );
-}
+LoanDashboard.layout = (page) => <AppLayout>{page}</AppLayout>;
