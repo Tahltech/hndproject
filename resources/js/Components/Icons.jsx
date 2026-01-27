@@ -24,6 +24,7 @@ import {
     ArrowLeftRight,
     EyeOffIcon,
     FileUser,
+    Search,
 } from "lucide-react";
 
 const icons = {
@@ -52,6 +53,7 @@ const icons = {
     loan:HandCoins,
     eyeoff: EyeOffIcon,
     files: FileUser,
+    search: Search,
 
 };
 

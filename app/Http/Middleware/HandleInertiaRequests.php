@@ -50,17 +50,18 @@ public function share(Request $request): array
                 ? [
                     'id'    => $user->user_id,
                     'name'  => $user->full_name,
+                    'username'  => $user->username,
                     'email' => $user->email,
 
                     // IMPORTANT: role comes from roles table
                     'role' => [
                         'id'   => $user->role->role_id,
-                        'name' => $user->role->role_name, // e.g. it_admin
+                        'name' => $user->role->role_name, 
                     ],
 
                     'bank'=>[
-                        'bank_name'=>$user->bank->name,
-                        'bank_profile'=>$user->bank->profile_photo,
+                        'bank_name'=>$user?->bank?->name || null,
+                        'bank_profile'=>$user?->bank?->profile_photo,
                     ],
                     'profile_photo' => $user->profile_photo,
                 ]

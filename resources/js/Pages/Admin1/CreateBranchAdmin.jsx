@@ -14,8 +14,6 @@ export default function CreateBranchAdmin({ branch }) {
         email: "",
         branch_id: branch.branch_id,
         phone_number: "",
-        password: "",
-        password_confirmation: "",
     });
 
     const submit = (e) => {
@@ -25,7 +23,7 @@ export default function CreateBranchAdmin({ branch }) {
 
     return (
         <>
-            <Head title={`${branch.name} – Branch Admins`} />
+            <Head title={`${branch.name} - Create Admins`} />
 
             <main className="page max-w-5xl mx-auto space-y-8">
                 {/* ===== Header ===== */}
@@ -73,7 +71,7 @@ export default function CreateBranchAdmin({ branch }) {
                     </div>
                 </div>
 
-                {/* ===== Animated Form ===== */}
+                
                 <div
                     className={`
                         transition-all duration-300 ease-out
@@ -148,7 +146,7 @@ export default function CreateBranchAdmin({ branch }) {
                                     </label>
                                     <input
                                         className="input mt-1"
-                                        type="text"
+                                        type="tel"
                                         value={data.phone_number}
                                         onChange={(e) =>
                                             setData(
@@ -158,62 +156,7 @@ export default function CreateBranchAdmin({ branch }) {
                                         }
                                     />
                                 </div>
-
-                                {/* Password */}
-                                <div className="relative">
-                                    <label className="text-sm font-medium">
-                                        Password
-                                    </label>
-                                    <input
-                                        className="input mt-1 pr-10"
-                                        type={
-                                            showPassword
-                                                ? "text"
-                                                : "password"
-                                        }
-                                        value={data.password}
-                                        onChange={(e) =>
-                                            setData(
-                                                "password",
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setShowPassword(!showPassword)
-                                        }
-                                        className="absolute right-3 top-[42px] text-muted"
-                                    >
-                                        <Icon
-                                            name={
-                                                showPassword
-                                                    ? "eye-off"
-                                                    : "eye"
-                                            }
-                                        />
-                                    </button>
-                                </div>
-
-                                {/* Confirm Password */}
-                                <div>
-                                    <label className="text-sm font-medium">
-                                        Confirm Password
-                                    </label>
-                                    <input
-                                        className="input mt-1"
-                                        type="password"
-                                        value={data.password_confirmation}
-                                        onChange={(e) =>
-                                            setData(
-                                                "password_confirmation",
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-                                </div>
-
+                                   
                                 {/* Actions */}
                                 <div className="md:col-span-2 flex justify-end gap-4 pt-4">
                                     <button

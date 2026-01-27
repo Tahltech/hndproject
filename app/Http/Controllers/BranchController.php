@@ -4,15 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Bank;
 use App\Models\User;
+use Inertia\Inertia;
 use App\Models\Branch;
-use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Http\Request;
+use App\Services\PHPMailerService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use function Laravel\Prompts\select;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class BranchController extends Controller
 {
@@ -62,23 +64,23 @@ class BranchController extends Controller
             'branches' => $branches
         ]);
     }
-
     public function alladmins()
     {
         $user = Auth::user();
 
-
         $admins = User::with(['role', 'branch'])
+            ->where('bank_id', $user->bank_id)
             ->whereHas('role', function ($query) {
                 $query->where('role_name', 'branch_manager');
-            })->latest()
+            })
+            ->latest()
             ->get();
-
 
         return Inertia::render("Admin1/BranchAdmins", [
             'branches' => $admins,
         ]);
     }
+
 
 
 
@@ -130,7 +132,7 @@ class BranchController extends Controller
     /**
      * Store a new branch
      */
-    public function store(Request $request)
+    public function store(Request $request, PHPMailerService $mailer)
     {
         $user = Auth::user();
         $bank = $user->bank;
@@ -151,14 +153,40 @@ class BranchController extends Controller
             return Redirect::back()->withErrors($validator)->withInput();
         }
 
-        // Create branch
-        Branch::create([
-            'bank_id' => $bank->bank_id,
-            'name' => $request->name,
-            'address' => $request->address,
-            'contact_number' => $request->contact_number,
-            'email' => $request->email,
-        ]);
+
+        try {
+
+            $branch = Branch::create([
+                'bank_id' => $bank->bank_id,
+                'name' => $request->name,
+                'address' => $request->address,
+                'contact_number' => $request->contact_number,
+                'email' => $request->email,
+            ]);
+
+
+            $emailBody = view('emails.branch_creation', [
+                'branch' => $branch,
+                'user' => $user,
+            ])->render();
+
+            $mailer->sendEmail(
+                $bank->email,
+                'Your  Branch Creation with TahlFIN',
+                $emailBody
+            );
+        } catch (\Throwable $e) {
+            Log::error('Branch Creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
 
         return Redirect::route('bnkadmindashboard')->with('success', 'Branch created successfully.');
     }
@@ -222,21 +250,27 @@ class BranchController extends Controller
         return Redirect::route('bnkadmindashboard')->with('success', 'Branch deleted successfully.');
     }
 
+    public function deletebank(Bank $bank) {}
 
 
     public function destroyAdmin(User $user)
     {
         $authUser = Auth::user();
 
-        // Check if the user belongs to the same bank as the authenticated user
-        if ($user->bank_id !== $authUser->bank_id) {
-            abort(403, 'You do not have permission to deactivate this user.');
-        }
+        // // Check if the user belongs to the same bank as the authenticated user
+        // if ($user->bank_id !== $authUser->bank_id) {
+        //     abort(403, 'You do not have permission to deactivate this user.');
+        // }
 
         // Instead of deleting, set status to 'inactive'
-        $user->update([
-            'status' => 'inactive',
-        ]);
+        // $user->update([
+        //     'status' => 'inactive',
+        // ]);
+
+
+        $deleted =  $user->delete();
+
+
 
         return redirect()->route('bnkadmindashboard')->with('success', 'User has been deactivated successfully.');
     }

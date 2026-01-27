@@ -17,11 +17,25 @@ export default function CreateBankAdmin({ bank }) {
         bank_id: bank.bank_id,
     });
 
-    console.log(bank);
-
     const submit = (e) => {
         e.preventDefault();
         post(route("itadmin.bank.admin"));
+    };
+
+    const { delete: destroy } = useForm();
+
+    const deleteBank = (bankId) => {
+        if (!confirm("Are you sure you want to delete this bank?")) return;
+
+        destroy(route("itadmin.delete", bankId), {
+            preserveScroll: true,
+            onSuccess: () => {
+                console.log("Bank deleted successfully");
+            },
+            onError: () => {
+                console.log("Failed to delete bank");
+            },
+        });
     };
 
     return (
@@ -29,10 +43,10 @@ export default function CreateBankAdmin({ bank }) {
             <Head title="Create Bank Admin" />
 
             <main className="space-y-8 max-w-5xl mx-auto">
-                {/* ===== Bank Info Card ===== */}
+                {/* Bank Info Card  */}
                 <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 shadow-sm">
                     <h1 className="text-xl font-bold mb-4">
-                        {bank.name} – Bank Information
+                        {bank.name} - Bank Information
                     </h1>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
@@ -64,25 +78,39 @@ export default function CreateBankAdmin({ bank }) {
                 </div>
 
                 {/* ===== Action Button ===== */}
-                <div className="flex justify-end">
+                <div className="flex justify-between gap-4">
                     <button
                         onClick={() => setShowForm(!showForm)}
                         className="
-                            flex items-center gap-2
-                            bg-[var(--color-primary)]
-                            text-white
-                            px-5 py-2.5
-                            rounded-xl
-                            hover:opacity-90
-                            transition
-                        "
+            flex items-center gap-2
+            bg-[var(--color-primary)]
+            text-white
+            px-5 py-2.5
+            rounded-xl
+            hover:opacity-90
+            transition
+        "
                     >
                         <Icon name="user-plus" className="w-4 h-4" />
                         {showForm ? "Hide Form" : "Create Bank Admin"}
                     </button>
+
+                    <button
+                        onClick={()=>deleteBank(bank.bank_id)}
+                        className="
+                         flex items-center gap-2
+                 bg-[var(--color-danger)]
+             text-white
+            px-5 py-2.5
+            rounded-xl
+            hover:opacity-90
+            transition "
+                    >
+                        Delete Bank
+                    </button>
                 </div>
 
-                {/* ===== Create Admin Form ===== */}
+                {/*  Create Admin Form*/}
                 {showForm && (
                     <form
                         onSubmit={submit}
@@ -131,7 +159,7 @@ export default function CreateBankAdmin({ bank }) {
                             />
 
                             <input
-                                type="text"
+                                type="tel"
                                 placeholder="Phone Number"
                                 value={data.phone_number}
                                 onChange={(e) =>
@@ -140,28 +168,7 @@ export default function CreateBankAdmin({ bank }) {
                                 className="input"
                             />
 
-                            <input
-                                type="password"
-                                placeholder="Password"
-                                value={data.password}
-                                onChange={(e) =>
-                                    setData("password", e.target.value)
-                                }
-                                className="input"
-                            />
-
-                            <input
-                                type="password"
-                                placeholder="Confirm Password"
-                                value={data.password_confirmation}
-                                onChange={(e) =>
-                                    setData(
-                                        "password_confirmation",
-                                        e.target.value
-                                    )
-                                }
-                                className="input"
-                            />
+                           
                         </div>
 
                         <div className="mt-6">
@@ -192,6 +199,4 @@ export default function CreateBankAdmin({ bank }) {
     );
 }
 
-CreateBankAdmin.layout = (page) => (
-    <AdminLayout>{page}</AdminLayout>
-);
+CreateBankAdmin.layout = (page) => <AdminLayout>{page}</AdminLayout>;

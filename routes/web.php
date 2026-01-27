@@ -47,8 +47,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/updateprofile', [SettingsController::class, 'updateProfile'])->name("updateprofile");
 
     Route::post('/settings/profile_photo', [SettingsController::class, 'updatePhoto'])
-        ->name('updateprofile.photo');
-    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])->name("updatepassword");
+        ->name('updateprofile-photo');
+    Route::post('/settings/password/request', [SettingsController::class, 'updatePasswordRequest'])->name("passwordupdaterequest");
+    Route::post('/settings/password/verify', [SettingsController::class, 'confirmPasswordUpdate'])->name("passwordupdateconfirm");
+
     Route::post('/settings/preferences', [SettingsController::class, 'updatePreferences'])->name("updatepreferences");
 });
 
@@ -84,6 +86,9 @@ Route::middleware(['auth', 'check_permission:view_dashboard_it_admin'])
 
         Route::delete('/bankadmins/{user}', [BankController::class, 'destroy'])
             ->name('bankadmin.delete');
+
+        Route::delete('/bankadmins/delete/{bank}', [BankController::class, 'deletebank'])
+            ->name('delete');
     });
 
 /*
@@ -106,8 +111,7 @@ Route::middleware(['auth'])->prefix('bnkadmindashboard')->group(function () {
     Route::get('/create', fn() => Inertia::render('Admin1/CreateBranch'))
         ->name('createbranch');
 
-    Route::post('/create', [BranchController::class, 'store'])
-        ->name('storebranch');
+    Route::post('/create/branch', [BranchController::class, 'store'])->name('storebranch');
 
     Route::get('/branch/{branch}/admin', [BranchController::class, 'branchAdmin'])
         ->name('createbranchadmin');
@@ -119,14 +123,16 @@ Route::middleware(['auth'])->prefix('bnkadmindashboard')->group(function () {
         ->name('deletebranch');
     Route::patch('/branch/{user}/status', [BankController::class, 'toggleStatus'])
         ->name('togglestatusbranchadmin');
-
-
+    Route::post('/create', [UserController::class, 'branchAdmin'])
+        ->name('storeBranchAdmin');
     Route::get('/profile', [BankProfileController::class, 'show'])->name('bankprofile');
 
     Route::patch('/profile/general', [BankProfileController::class, 'updateGeneral'])->name("bank.profile.general");
     Route::post('/profile/branding', [BankProfileController::class, 'updateBranding'])->name("bank.profile.branding");
     Route::patch('/profile/contact', [BankProfileController::class, 'updateContact'])->name("bank.profile.contact");
     Route::patch('/profile/settings', [BankProfileController::class, 'updateSettings']);
+
+     Route::delete('/delete/admin/{user}', [BranchController::class, 'destroyAdmin'])->name("branch.delete");
 });
 
 
@@ -144,9 +150,6 @@ Route::middleware('auth')->prefix('branchadmindashboard')->group(function () {
         ->name('createbranchadmin');
 
     Route::get('/available/branch', [BranchController::class, 'index']);
-
-    Route::post('/create', [UserController::class, 'branchAdmin'])
-        ->name('storeBranchAdmin');
 
     Route::get("/role", fn() => inertia("Admin2/CreateRole"));
 

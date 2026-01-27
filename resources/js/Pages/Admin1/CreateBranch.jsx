@@ -82,7 +82,7 @@ export default function CreateBranch() {
                                     Contact Number
                                 </label>
                                 <input
-                                    type="text"
+                                    type="tel"
                                     value={data.contact_number}
                                     onChange={(e) =>
                                         setData(

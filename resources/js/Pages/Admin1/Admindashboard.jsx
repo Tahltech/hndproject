@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, Head } from "@inertiajs/react";
+import { Link, Head, usePage } from "@inertiajs/react";
 import { route } from "ziggy-js";
 import axios from "axios";
 import AdminLayout from "../Layout/AdminLayout";
@@ -8,15 +8,15 @@ import Icon from "@/Components/Icons";
 export default function Admindashboard() {
     const [branches, setBranches] = useState([]);
     const [search, setSearch] = useState("");
-    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const {props} = usePage();
+    const user = props?.auth?.user;
 
     useEffect(() => {
         axios
             .get("/bnkadmindashboard/branches")
             .then((response) => {
                 setBranches(response.data.branches || []);
-                setUser(response.data.authUser || null);
             })
             .catch((error) => console.error("Error fetching data:", error))
             .finally(() => setLoading(false));
@@ -26,12 +26,6 @@ export default function Admindashboard() {
         branch.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    const logout = (e) => {
-        e.preventDefault();
-        axios.post("/logout").then(() => {
-            window.location.href = "/";
-        });
-    };
 
     return (
         <>
@@ -51,7 +45,7 @@ export default function Admindashboard() {
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search banks..."
+                                placeholder="Search branch..."
                                 className="
                            w-full pl-10 pr-3 py-2.5
                            rounded-xl
@@ -65,7 +59,7 @@ export default function Admindashboard() {
                             />
                         </div>
 
-                        {/* Profile */}
+                         
                         <div className="flex flex-col items-center cursor-pointer group">
                             <div
                                 className="
@@ -79,8 +73,8 @@ export default function Admindashboard() {
                             >         
                                 <img
                                     src={
-                                        user?.profile_photo
-                                            ? `/storage/bank_logos/${user?.bank?.profile_photo}`
+                                        user?.bank?.bank_profile
+                                            ? `/storage/bank_logos/${user?.bank?.bank_profile}`
                                             : "/storage/profile_photos/default-avatar.png"
                                     }
                                     alt={user?.full_name || "User"}

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserKyc;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Log;
+use App\Models\UserKyc;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 
 
@@ -23,7 +24,6 @@ class UserKycController extends Controller
     {
         $userId = Auth::user()->user_id;
 
-
         if (!$userId) {
             abort(401, 'Unauthenticated.');
         }
@@ -38,35 +38,37 @@ class UserKycController extends Controller
         try {
             $data = [];
 
-            foreach (
-                [
-                    'passport_photo',
-                    'id_card_front',
-                    'id_card_back',
-                    'proof_of_address',
-                ] as $field
-            ) {
+            foreach (['passport_photo', 'id_card_front', 'id_card_back', 'proof_of_address'] as $field) {
 
                 if ($request->hasFile($field)) {
                     $file = $request->file($field);
-
                     $filename = $field . '_' . Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $file->storeAs('public/kyc', $filename);
+
+                    $file->storeAs('kyc', $filename, 'public');
+
+                    Log::info('KYC file stored', [
+                        'path' => 'storage/app/public/kyc/' . $filename
+                    ]);
 
                     $data[$field] = $filename;
                 }
             }
 
+            
             UserKyc::updateOrCreate(
                 ['user_id' => $userId],
-                array_merge($data, [
-                    'status' => 'pending',
-                ])
+                array_merge($data, ['status' => 'pending'])
+            );
+            User::update(
+                ['user_id' => $userId],
+                array_merge($data
+
+                )
+
             );
 
             return back()->with('success', 'KYC submitted successfully.');
         } catch (\Throwable $e) {
-
             Log::error('KYC submission failed', [
                 'user_id' => $userId,
                 'error'   => $e->getMessage(),

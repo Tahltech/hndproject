@@ -76,7 +76,7 @@ export default function CreateBank() {
                                 Contact Number
                             </label>
                             <input
-                                type="text"
+                                type="tel"
                                 value={data.contact_number}
                                 placeholder="Enter Contact Number"
                                 onChange={(e) => setData("contact_number", e.target.value)}

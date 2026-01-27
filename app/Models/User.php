@@ -29,6 +29,8 @@ class User extends Authenticatable
         'password',
         'status',
         'profile_photo',
+        'password_verification_code',
+        'password_verification_expires_at',
     ];
     protected $guard_name = 'web';
     // Relationships

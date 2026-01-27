@@ -44,8 +44,8 @@ export default function Userdashboard() {
                             <div className="w-16 h-16 rounded-full overflow-hidden bg-[var(--color-primary-light)] flex items-center justify-center group hover:ring-2 hover:ring-[var(--color-primary)] transition">
                                 <img
                                     src={
-                                        user?.profile_photo_path
-                                            ? `/storage/profile_photos/${user.profile_photo_path}`
+                                        user?.profile_photo
+                                            ? `/storage/profile_photos/${user.profile_photo}`
                                             : "/storage/profile_photos/default-avatar.png"
                                     }
                                     alt={user?.name || "User Avatar"}

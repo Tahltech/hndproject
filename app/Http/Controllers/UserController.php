@@ -3,18 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Zone;
+use Inertia\Inertia;
 use App\Models\Branch;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\Methode\Middleware;
-use App\Models\Zone;
+use App\Services\PHPMailerService;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+
 use Illuminate\Support\Facades\Hash;
 use function Laravel\Prompts\password;
-use Illuminate\Support\Facades\Log;
-
 use Illuminate\Routing\Controller as BaseController;
-use Inertia\Inertia;
+use PhpParser\Node\Stmt\TryCatch;
 
 class UserController extends Controller
 {
@@ -88,13 +91,8 @@ class UserController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-
-
         $request->session()->invalidate();
-
-
         $request->session()->regenerateToken();
-
         return redirect()
             ->route('home')
             ->withHeaders([
@@ -103,16 +101,12 @@ class UserController extends Controller
                 'Expires'       => '0',
             ]);
     }
-
-
-
-
     // Handle frontend user registration
-    public function storeUsers(Request $request)
+    public function storeUsers(Request $request, PHPMailerService $mailer)
     {
         $request->validate([
             'full_name' => 'required|string|max:100',
-            'username' => 'required|string|max:50',
+            'username' => 'required|string|max:50|unique:users',
             'email' => 'required|email|unique:users,email',
             'phone_number' => 'required|unique:users,phone_number',
             'password' => 'required|min:5|confirmed',
@@ -138,6 +132,16 @@ class UserController extends Controller
                 'password'      => Hash::make($request->password),
                 'status'        => 'pending',
             ]);
+
+            $emailBody = view('emails.account-created', [
+                'user' => $user,
+            ])->render();
+
+            $mailer->sendEmail(
+                $user->email,
+                'Account Created with TahlFIN under  ' . $user->bank->name,
+                $emailBody
+            );
         } catch (\Throwable $e) {
 
             Log::error('User creation failed', [
@@ -161,33 +165,45 @@ class UserController extends Controller
     }
 
 
-    public function bankAdmin(Request $request)
+    public function bankAdmin(Request $request, PHPMailerService $mailer)
     {
         $request->validate([
             'full_name' => 'required|string|max:100',
-            'username' => 'required|string|max:50',
+            'username' => 'required|string|max:50|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'phone_number' => 'required|unique:users,phone_number',
             'branch_id' => 'exists:branches,branch_id',
             'bank_id' => 'exists:banks,bank_id|required',
-            'password' => 'required|min:5|confirmed',
 
         ]);
+
         $roleName = 'overall_admin';
         $legacyRole = Role::where('name', $roleName)->first();
+
+        $tempPassword = Str::random(8);
 
         try {
             $user = User::create([
                 'full_name' => $request->full_name,
-                'username' => strtolower(str_replace(' ', '_', $request->full_name)),
+                'username' => $request->username ?? strtolower(str_replace(' ', '_', $request->full_name)),
                 'email' => $request->email,
                 'phone_number' => $request->phone_number,
                 'branch_id' => $request->branch_id,
                 'role_id' =>  $legacyRole->id,
                 'bank_id' =>  $request->bank_id,
-                'password' => Hash::make($request->password),
+                'password' => Hash::make($tempPassword),
                 'status' => 'active',
             ]);
+            $emailBody = view('emails.bankadminaccount', [
+                'user' => $user,
+                'password' => $tempPassword,
+            ])->render();
+
+            $mailer->sendEmail(
+                $user->email,
+                'Your Bank Admin Creation with TahlFin',
+                $emailBody
+            );
         } catch (\Throwable $e) {
             Log::error('User creation failed', [
                 'error_message' => $e->getMessage(),
@@ -205,10 +221,10 @@ class UserController extends Controller
 
         $user->assignRole($roleName);
 
-        return redirect()->back()->with('success', 'Your account has been created! Wait for approval.');
+        return redirect()->back()->with('success', 'Account has been created successfully.');
     }
 
-    public function branchAdmin(Request $request)
+    public function branchAdmin(Request $request, PHPMailerService $mailer)
     {
         $request->validate([
             'full_name' => 'required|string|max:100',
@@ -216,26 +232,42 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone_number' => 'required|unique:users,phone_number',
             'branch_id' => 'exists:branches,branch_id',
-            'password' => 'required|min:5|confirmed',
+
 
         ]);
 
         $roleName = 'branch_manager';
         $bankId = Auth::user()->bank_id;
-        // Legacy role_id for DB relations
+
+
+        $tempPassword = Str::random(8);
         $legacyRole = Role::where('name', $roleName)->first();
         try {
             $user = User::create([
                 'full_name' => $request->full_name,
-                'username' => strtolower(str_replace(' ', '_', $request->full_name)),
+                'username' => $request->username ?? strtolower(str_replace(' ', '_', $request->full_name)),
                 'email' => $request->email,
                 'phone_number' => $request->phone_number,
                 'branch_id' => $request->branch_id,
                 'role_id' =>  $legacyRole->id,
                 'bank_id' =>  $bankId,
-                'password' => Hash::make($request->password),
+                'password' => Hash::make($tempPassword),
                 'status' => 'active',
             ]);
+            $emailBody = view('emails.branchadmin', [
+                'user' => $user,
+                'password' => $tempPassword,
+            ])->render();
+
+            $mailer->sendEmail(
+                $user->email,
+                'Your Branch Admin Creation with TahlFIN',
+                $emailBody
+            );
+
+            $user->assignRole($roleName);
+
+            return redirect()->route("bnkadmindashboard")->with('success', 'Your account has been created!');
         } catch (\Throwable $e) {
             Log::error('User creation failed', [
                 'error_message' => $e->getMessage(),
@@ -249,23 +281,10 @@ class UserController extends Controller
                 ->withInput()
                 ->with('error', 'Something went wrong. Please try again later.');
         }
-        $user->assignRole($roleName);
-
-        return redirect()->route("bnkadmindashboard")->with('success', 'Your account has been created!');
-    }
-
-
-
-    // Show branch admin dashboard to create staff
-    public function createStaff()
-    {
-        $branches = Branch::where('branch_id', Auth::user()->branch_id)->get();
-        $roles = Role::whereNotIn('role_name', ['user', 'overall_admin'])->get();
-        return view('users.create_staff', compact('branches', 'roles'));
     }
 
     // Store branch staff
-    public function storeStaff(Request $request)
+    public function storeStaff(Request $request, PHPMailerService $mailer)
     {
         $request->validate([
             'full_name' => 'required|string|max:100',
@@ -273,29 +292,52 @@ class UserController extends Controller
             'username' => 'string|max:100',
             'phone_number' => 'required|unique:users,phone_number',
             'role' => 'required|exists:roles,role_name',
-            'password' => 'required',
+
         ]);
 
         $staff = Auth::user();
         $roleId = Role::where("name", $request->role)->first();
 
+        $tempPassword = Str::random(8);
 
-        $staffs =  User::create([
-            'full_name' => $request->full_name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'branch_id' => $staff->branch_id,
-            'bank_id' => $staff->bank_id,
-            'role_id' => $roleId->id,
-            'password' => Hash::make($request->password),
-            'status' => 'active',
-        ]);
-        //dd($oops);
-        $staffs->assignRole($request->role);
+        try {
+            $user =  User::create([
+                'full_name' => $request->full_name,
+                'username' => $request->username,
+                'email' => $request->email,
+                'phone_number' => $request->phone_number,
+                'branch_id' => $staff->branch_id,
+                'bank_id' => $staff->bank_id,
+                'role_id' => $roleId->id,
+                'password' => Hash::make($tempPassword),
+                'status' => 'active',
+            ]);
+            $user->assignRole($request->role);
 
+            $emailBody = view('emails.account-created', [
+                'user' => $user,
+            ])->render();
 
-        return redirect()->route("branchadmindashboard")->with('success', 'Staff account created successfully!');
+            $mailer->sendEmail(
+                $user->email,
+                'Account Created with TahlFIN under  ' . $user->bank->name,
+                $emailBody
+            );
+
+            return redirect()->route("branchadmindashboard")->with('success', 'Staff account created successfully!');
+        } catch (\Throwable $e) {
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+                'request_data'  => $request->except(['password', 'password_confirmation']),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
     }
 
     public function pending()
@@ -313,12 +355,24 @@ class UserController extends Controller
         ]);
     }
 
-    public function approve($id)
+    public function approve($id, PHPMailerService $mailer)
     {
         $user = User::findOrFail($id);
         try {
             $user->status = 'active';
             $user->save();
+
+            $emailBody = view('emails.account-activated', [
+                'user' => $user,
+            ])->render();
+
+            $mailer->sendEmail(
+                $user->email,
+                'Account Approved Under  ' . $user->bank->name,
+                $emailBody
+            );
+
+            return redirect()->back()->with('success', 'User approved successfully!');
         } catch (\Throwable $e) {
             Log::error('User creation failed', [
                 'error_message' => $e->getMessage(),
@@ -331,12 +385,10 @@ class UserController extends Controller
                 ->withInput()
                 ->with('error', 'Something went wrong. Please try again later.');
         }
-
-        return redirect()->back()->with('success', 'User approved successfully!');
     }
 
     // Reject pending user
-    public function reject($id)
+    public function reject($id, PHPMailerService $mailer)
     {
         $user = User::findOrFail($id);
         if (!$user) {
@@ -345,6 +397,16 @@ class UserController extends Controller
         try {
             $user->status = 'rejected';
             $user->save();
+
+            $emailBody = view('emails.account-activated', [
+                'user' => $user,
+            ])->render();
+
+            $mailer->sendEmail(
+                $user->email,
+                'Account Rejected' . $user->bank->name,
+                $emailBody
+            );
         } catch (\Throwable $e) {
             Log::error('User creation failed', [
                 'error_message' => $e->getMessage(),
@@ -368,7 +430,7 @@ class UserController extends Controller
         return view('users.index', compact('users'));
     }
 
-    public function zonesave(Request $request)
+    public function zonesave(Request $request, PHPMailerService $mailer)
     {
         $request->validate([
             "zoneName" => 'required|min:5',
@@ -383,6 +445,7 @@ class UserController extends Controller
                 'branch_id' => $branchId,
                 'name' => $request->zoneName,
             ]);
+
         } catch (\Throwable $e) {
             Log::error('User creation failed', [
                 'error_message' => $e->getMessage(),

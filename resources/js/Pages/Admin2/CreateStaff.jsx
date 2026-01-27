@@ -10,7 +10,6 @@ export default function CreateStaff() {
         phone_number: "",
         email: "",
         role: "",
-        password: "",
     });
 
     const submit = (e) => {
@@ -81,14 +80,6 @@ export default function CreateStaff() {
                         <option value="support_officer">Support Officer</option>
                         <option value="accountant">Accountant</option>
                     </select>
-
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={data.password}
-                        onChange={(e) => setData("password", e.target.value)}
-                        className="input"
-                    />
 
                     <button
                         type="submit"

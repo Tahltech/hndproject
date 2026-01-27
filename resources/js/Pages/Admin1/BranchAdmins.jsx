@@ -1,17 +1,43 @@
 import React, { useState } from "react";
-import { Head, router} from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import AdminLayout from "../Layout/AdminLayout";
 import Icon from "@/Components/Icons";
+import { useToast } from "@/Components/ToastContext";
 
 export default function BankAdmins({ branches }) {
     const [search, setSearch] = useState("");
+    const [processingId, setProcessingId] = useState(null);
+    const { addToast } = useToast();
+    const [admins, setAdmins] = useState(branches);
 
-    // Filter admins based on name or username
     const filteredAdmins = branches.filter(
         (admin) =>
             admin.full_name.toLowerCase().includes(search.toLowerCase()) ||
-            admin.username.toLowerCase().includes(search.toLowerCase())
+            admin.username.toLowerCase().includes(search.toLowerCase()),
     );
+
+    const toggleStatus = (admin) => {
+        setProcessingId(admin.user_id);
+
+        axios
+            .patch(route("togglestatusbranchadmin", admin.user_id))
+            .then((res) => {
+                const updatedAdmin = res.data.user;
+
+                setAdmins((prev) =>
+                    prev.map((a) =>
+                        a.user_id === updatedAdmin.user_id ? updatedAdmin : a,
+                    ),
+                );
+
+                addToast(res.data.message, "success");
+            })
+            .catch((err) => {
+                console.error(err);
+                addToast("Something went wrong. Please try again.", "danger");
+            })
+            .finally(() => setProcessingId(null));
+    };
 
     return (
         <>
@@ -112,13 +138,9 @@ export default function BankAdmins({ branches }) {
                                 <div className="flex gap-2 mt-3">
                                     {/* Activate / Deactivate */}
                                     <button
-                                        onClick={() =>
-                                            router.patch(
-                                                route(
-                                                    "togglestatusbranchadmin",
-                                                    admin.user_id
-                                                )
-                                            )
+                                        onClick={() => toggleStatus(admin)}
+                                        disabled={
+                                            processingId === admin.user_id
                                         }
                                         className={`px-3 py-1 text-xs rounded-lg font-semibold ${
                                             admin.status === "active"
@@ -126,20 +148,26 @@ export default function BankAdmins({ branches }) {
                                                 : "bg-green-100 text-green-600"
                                         }`}
                                     >
-                                        {admin.status === "active"
-                                            ? "Deactivate"
-                                            : "Activate"}
+                                        {processingId === admin.user_id
+                                            ? "…"
+                                            : admin.status === "active"
+                                              ? "Deactivate"
+                                              : "Activate"}
                                     </button>
 
                                     {/* Delete */}
                                     <button
                                         onClick={() => {
-                                            if (confirm("Are you sure?")) {
+                                            if (
+                                                confirm(
+                                                    "Are you sure you want to delete this admin?",
+                                                )
+                                            ) {
                                                 router.delete(
                                                     route(
-                                                        "itadmin.bankadmin.delete",
-                                                        admin.user_id
-                                                    )
+                                                        "branch.delete",
+                                                        admin.user_id,
+                                                    ),
                                                 );
                                             }
                                         }}
