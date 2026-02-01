@@ -51,7 +51,7 @@ export default function BranchAdminDashboard() {
                 onSuccess: () => {
                     setData("agent_id", null);
                 },
-            }
+            },
         );
     };
 
@@ -69,11 +69,11 @@ export default function BranchAdminDashboard() {
     }));
 
     const assignedAgents = agents.filter(
-        (agent) => Number(agent.is_assigned) === 1
+        (agent) => Number(agent.is_assigned) === 1,
     );
 
     const unassignedAgents = agents.filter(
-        (agent) => Number(agent.is_assigned) === 0
+        (agent) => Number(agent.is_assigned) === 0,
     );
 
     return (
@@ -82,61 +82,91 @@ export default function BranchAdminDashboard() {
 
             <main className="page space-y-8">
                 {/* ===== Top Right Bar ===== */}
-                <div className="flex justify-end items-center gap-4">
-                    {/* Bank Logo + Name */}
-                    <div className="flex flex-col items-center cursor-pointer group">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-[var(--color-primary-light)] flex items-center justify-center group-hover:ring-2 group-hover:ring-[var(--color-primary)] transition">
-                            <img
-                                src={
-                                    user?.bank?.bank_profile
-                                        ? `/storage/bank_logos/${user.bank?.bank_profile}`
-                                        : "/storage/profile_photos/default-avatar.png"
-                                }
-                                alt={user?.bank?.bank_name || "Bank Logo"}
-                                className="w-full h-full object-cover"
-                            />
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    {/* Left: Welcome */}
+                    <div className=" flex items-center gap-4">
+                        <div>
+                            <p className="text-sm text-[var(--color-text-muted)]">
+                                Welcome back, Branch Admin
+                            </p>
+                            <h2 className="mt-1 text-xl font-semibold text-[var(--color-text-primary)]">
+                                {user?.name || user?.username}
+                            </h2>
                         </div>
-                        <p className="text-xs font-semibold mt-1">
-                            {user?.bank?.bank_name || "Bank Name"}
-                        </p>
                     </div>
 
-                    {/* View Branch Staff Button */}
-                    <Link
-                        href={route("branchStaff")} 
-                        className="btn btn-sm btn-primary flex items-center gap-2 px-3 h-8"
-                    >
-                        <Icon name="users" className="w-4 h-4" />
-                        <span className="text-xs font-semibold">
-                            View Staff
-                        </span>
-                    </Link>
+                    {/* Right: Bank Info + Action */}
+                    <div className="flex items-center gap-6">
+                        {/* Bank Logo + Name */}
+                        <div className="flex items-center gap-3 cursor-pointer group">
+                            <div
+                                className="
+                    w-10 h-10 rounded-full overflow-hidden
+                    bg-[var(--color-primary-light)]
+                    flex items-center justify-center
+                    group-hover:ring-2 group-hover:ring-[var(--color-primary)]
+                    transition
+                "
+                            >
+                                <img
+                                    src={
+                                        user?.bank?.bank_profile
+                                            ? `/storage/bank_logos/${user.bank?.bank_profile}`
+                                            : "/storage/profile_photos/default-avatar.png"
+                                    }
+                                    alt={user?.bank?.bank_name || "Bank Logo"}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+
+                            <div className="hidden sm:block">
+                                <p className="text-sm font-semibold leading-tight">
+                                    {user?.bank?.bank_name || "Bank Name"}
+                                </p>
+                                <p className="text-xs text-[var(--color-text-muted)]">
+                                    Branch Admin
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Action Button */}
+                        <Link
+                            href={route("branchStaff")}
+                            className="btn btn-sm btn-primary flex items-center gap-2"
+                        >
+                            <Icon name="users" className="w-4 h-4" />
+                            <span className="text-xs font-semibold">
+                                View Staff
+                            </span>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* ===== Stats Cards ===== */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="card">
+                    <div className="card border-l-4 border-[var(--color-primary)]">
                         <p className="text-muted">Total Zones</p>
                         <h3 className="mt-2 font-extrabold text-[1.8rem]">
                             {zones.length}
                         </h3>
                     </div>
 
-                    <div className="card">
+                    <div className="card border-l-4 border-[var(--color-primary)]">
                         <p className="text-muted">Total Agents</p>
                         <h3 className="mt-2 font-extrabold text-[1.8rem]">
                             {agents.length}
                         </h3>
                     </div>
 
-                    <div className="card">
+                    <div className="card  border-l-4 border-[var(--color-success)]">
                         <p className="text-muted">Assigned Agents</p>
                         <h3 className="mt-2 font-extrabold text-[1.8rem]">
                             {assignedAgents.length}
                         </h3>
                     </div>
 
-                    <div className="card">
+                    <div className="card  border-l-4 border-[var(--color-pending)]">
                         <p className="text-muted">Unassigned Agents</p>
                         <h3 className="mt-2 font-extrabold text-[1.8rem]">
                             {unassignedAgents.length}
@@ -165,20 +195,20 @@ export default function BranchAdminDashboard() {
                             <Select
                                 options={zoneOptions}
                                 value={zoneOptions.find(
-                                    (z) => z.value === data.zone_id
+                                    (z) => z.value === data.zone_id,
                                 )}
                                 onChange={(option) => {
                                     setData("zone_id", option.value);
 
                                     const assignedAgent = agents.find(
-                                        (a) => a.zone_id === option.value
+                                        (a) => a.zone_id === option.value,
                                     );
 
                                     setData(
                                         "agent_id",
                                         assignedAgent
                                             ? assignedAgent.user_id
-                                            : ""
+                                            : "",
                                     );
                                 }}
                                 placeholder="Select zone"
@@ -191,7 +221,7 @@ export default function BranchAdminDashboard() {
                             <Select
                                 options={agentOptions}
                                 value={agentOptions.find(
-                                    (a) => a.value === data.agent_id
+                                    (a) => a.value === data.agent_id,
                                 )}
                                 onChange={(option) =>
                                     setData("agent_id", option.value)
@@ -210,14 +240,14 @@ export default function BranchAdminDashboard() {
                                 agents.find(
                                     (a) =>
                                         a.user_id === data.agent_id &&
-                                        Number(a.is_assigned) === 1
+                                        Number(a.is_assigned) === 1,
                                 )
                                     ? "bg-[var(--color-warning)]" // De-assign color
                                     : "btn-primary"
                             } disabled:opacity-60`}
                             onClick={(e) => {
                                 const selectedAgent = agents.find(
-                                    (a) => a.user_id === data.agent_id
+                                    (a) => a.user_id === data.agent_id,
                                 );
 
                                 if (
@@ -233,18 +263,17 @@ export default function BranchAdminDashboard() {
                             {agents.find(
                                 (a) =>
                                     a.user_id === data.agent_id &&
-                                    Number(a.is_assigned) === 1
+                                    Number(a.is_assigned) === 1,
                             )
                                 ? processing
                                     ? "Processing..."
                                     : "De-assign Agent"
                                 : processing
-                                ? "Assigning..."
-                                : "Assign Agent"}
+                                  ? "Assigning..."
+                                  : "Assign Agent"}
                         </button>
                     </form>
                 </div>
-
             </main>
         </>
     );

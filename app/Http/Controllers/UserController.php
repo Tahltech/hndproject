@@ -38,27 +38,16 @@ class UserController extends Controller
 
     public function login(Request $request)
     {
-        // Validate credentials
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
-        // dd($credentials
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
             /** @var \App\Models\User&\Spatie\Permission\Traits\HasRoles $user */
             $user = Auth::user();
-
-            if ($user->status !== 'active') {
-                return redirect()->route('login')->withErrors([
-                    'email' => 'Your account is not active yet. Contact admin.'
-                ]);
-            }
-
-            // Get the first role assigned to the user
             $roleName = $user->getRoleNames()->first();
-
             // Redirect based on role and permission
             switch ($roleName) {
                 case 'user':
@@ -133,15 +122,27 @@ class UserController extends Controller
                 'status'        => 'pending',
             ]);
 
-            $emailBody = view('emails.account-created', [
-                'user' => $user,
-            ])->render();
+            if ($user->bank_id) {
+                $emailBody = view('emails.account-created', [
+                    'user' => $user,
+                ])->render();
 
-            $mailer->sendEmail(
-                $user->email,
-                'Account Created with TahlFIN under  ' . $user->bank->name,
-                $emailBody
-            );
+                $mailer->sendEmail(
+                    $user->email,
+                    'Account Created with TahlFIN under  ' . $user->bank->name,
+                    $emailBody
+                );
+            } else {
+                $emailBody = view('emails.User_created', [
+                    'user' => $user,
+                ])->render();
+
+                $mailer->sendEmail(
+                    $user->email,
+                    'Account Created with TahlFIN',
+                    $emailBody
+                );
+            }
         } catch (\Throwable $e) {
 
             Log::error('User creation failed', [
@@ -407,6 +408,8 @@ class UserController extends Controller
                 'Account Rejected' . $user->bank->name,
                 $emailBody
             );
+
+            return redirect()->back()->with('success', 'User registration rejected.');
         } catch (\Throwable $e) {
             Log::error('User creation failed', [
                 'error_message' => $e->getMessage(),
@@ -419,8 +422,6 @@ class UserController extends Controller
                 ->withInput()
                 ->with('error', 'Something went wrong. Please try again later.');
         }
-
-        return redirect()->back()->with('success', 'User registration rejected.');
     }
 
 
@@ -445,21 +446,18 @@ class UserController extends Controller
                 'branch_id' => $branchId,
                 'name' => $request->zoneName,
             ]);
-
         } catch (\Throwable $e) {
             Log::error('User creation failed', [
                 'error_message' => $e->getMessage(),
                 'file'          => $e->getFile(),
                 'line'          => $e->getLine(),
             ]);
+            return redirect()->route("branchadmindashboard")->with("success", "zone created succesfully");
 
             return redirect()
                 ->back()
                 ->withInput()
                 ->with('error', 'Something went wrong. Please try again later.');
         }
-
-
-        return redirect()->route("branchadmindashboard")->with("success", "zone created succesfully");
     }
 }

@@ -109,18 +109,23 @@ class SettingsController extends Controller
 
     public function updatePreferences(Request $request)
     {
+        $request->validate([
+            'language' => 'required|string|in:English,French',
+            'darkMode' => 'required|boolean',
+        ]);
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $request->validate([
-            'language' => 'nullable|string',
-            'darkMode' => 'nullable|boolean',
-        ]);
+        $user->preferences = [
+            'language' => $request->language,
+            'darkMode' => $request->darkMode,
+        ];
 
-        $user->update($request->only('language', 'darkMode'));
+        $user->save();
 
-        return back()->with('success', 'Preferences updated successfully.');
+        return back()->with('success', 'Preferences updated successfully');
     }
+
 
     public function updateNotifications(Request $request)
     {
@@ -172,17 +177,17 @@ class SettingsController extends Controller
             'code' => $code,
         ])->render();
 
-        
+
         try {
 
-            
+
             $sent = $mailer->sendEmail(
                 $user->email,
                 'Password Change Verification Code',
                 $body
             );
 
-          
+
             if (!$sent) {
                 Log::error('Email failed silently');
                 return back()->with("error", "Email could not be sent");

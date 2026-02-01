@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\Loan;
 use Inertia\Inertia;
 use App\Models\Account;
-use App\Models\Loan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Http\App\Http\Controllers\TransactionController;
 
@@ -16,7 +17,7 @@ class LoanController extends Controller
 
     public function index()
     {
-        
+
         return Inertia::render('User/LoanApplication');
     }
 
@@ -35,16 +36,10 @@ class LoanController extends Controller
                 'message' => 'No account found'
             ]);
         }
-
-
         $activeLoans = Loan::where('account_id', $account->account_id)
             ->whereIn('status', ['pending', 'approved'])
             ->get();
-
-        
         $activeLoanTotal = $activeLoans->sum('principal_amount');
-
-
         $monthlyDeposits = $account->transactions()
             ->where('type', 'deposit')
             ->where('created_at', '>=', now()->subDays(30))
@@ -58,7 +53,7 @@ class LoanController extends Controller
 
 
         $eligible = $remainingLimit >= 1000;
-       
+
         return response()->json([
             'eligible' => true,
             'loanLimit' => $loanLimit,
@@ -154,8 +149,6 @@ class LoanController extends Controller
 
     public function applyloan(Request $request)
     {
-
-
         $values = $request->validate([
             'amount' => "required|numeric|min:1000|max:1000000",
             'loan_purpose' => 'required|string|max:255',
@@ -169,33 +162,43 @@ class LoanController extends Controller
             'g_id_number' => "required|string|min:4|max:30",
             'g_address' => "required|string|max:255",
         ]);
+        try {
+            $user = Auth::user();
+            $userId = $user->user_id;
+            $account = Account::where("user_id", $userId)->first();
 
 
+            Loan::create([
+                "account_id" => $account->account_id,
+                "principal_amount" => $request->amount,
+                "interest_rate" => "10",
+                "loan_purpose" => $request->loan_purpose,
+                "repayment_period" => $request->repayment_period,
+                "id_number" => $request->id_number,
+                "address" => $request->address,
+                "g_full_name" => $request->g_full_name,
+                "g_email" => $request->g_email,
+                'g_phone' => $request->g_phone,
+                'g_id_number' => $request->g_id_number,
+                'g_address' => $request->g_address,
+                "status" => "pending",
+            ]);
 
-        $user = Auth::user();
-        $userId = $user->user_id;
-        $account = Account::where("user_id", $userId)->first();
+            return redirect()->route("loan.index")->with("success", "Loan requested Succesfully wait  for its approval");
+        } catch (\Throwable $e) {
 
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+                'request_data'  => $request->except(['password', 'password_confirmation']),
+            ]);
 
-        Loan::create([
-            "account_id" => $account->account_id,
-            "principal_amount" => $request->amount,
-            "interest_rate" => "10",
-            "loan_purpose" => $request->loan_purpose,
-            "repayment_period" => $request->repayment_period,
-            "id_number" => $request->id_number,
-            "address" => $request->address,
-            "g_full_name" => $request->g_full_name,
-            "g_email" => $request->g_email,
-            'g_phone' => $request->g_phone,
-            'g_id_number' => $request->g_id_number,
-            'g_address' => $request->g_address,
-            "status" => "pending",
-        ]);
-
-
-
-        return redirect()->route("loan.index")->with("success", "Loan requested Succesfully wait  for its approval");
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
+        }
     }
     public function showRequests(Request $request)
     {

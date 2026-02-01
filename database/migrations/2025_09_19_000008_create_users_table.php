@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('full_name', 100);
             $table->string('username', 30)->unique();
             $table->string('phone_number', 14)->unique();
+            $table->json('preferences');
             $table->string('email', 100)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');

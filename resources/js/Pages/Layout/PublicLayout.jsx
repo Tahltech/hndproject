@@ -10,40 +10,47 @@ export default function PublicLayout({ children }) {
         <ToastProvider>
             <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-text-primary)]">
                 {/* Header*/}
-                <header className="w-full bg-[var(--color-surface)] shadow-sm">
+                <header className="w-full bg-[var(--color-surface)] shadow-sm max-w-7xl mx-auto px-4 md:px-10">
                     <div className="header-container flex items-center justify-between flex-wrap gap-2">
                         {/* Brand */}
                         <div className="app-brand flex items-center gap-2">
                             <img
                                 src="/Images/Tahlfin.png"
                                 alt="TahlFIN"
-                                className="app-logo max-w-[80px] md:max-w-[150px]"
+                                className="app-logo max-w-[100px] md:max-w-[130px]"
                             />
-                            <div className="app-brand-text flex flex-col">
+                            <div className="app-brand-text flex flex-col font-bold">
                                 <span className="app-brand-title text-sm md:text-lg">
                                     Tahl
                                     <span className="brand-accent">FIN</span>
                                 </span>
-                                <p className="text-[var(--color-text-muted)] text-[10px] md:text-sm">
+                                <p className="text-[var(--color-text-muted)] text-[10px] font-normal md:text-sm italic">
                                     Your Trusted Financial Expert
                                 </p>
                             </div>
                         </div>
 
                         {/* Desktop Navigation */}
-                        <nav className="nav-links hidden md:flex items-center gap-6 ">
-                            <Link href={route("home")} className="nav-link ">
-                                Home
-                            </Link>
-                            <Link href="/about" className="nav-link">
-                                About
-                            </Link>
-                            <Link href="/pricing" className="nav-link">
-                                Pricing
-                            </Link>
-                            <Link href="/contact" className="nav-link">
-                                Contact
-                            </Link>
+                        <nav className="hidden md:flex items-center gap-6 font-bold">
+                            {[
+                                { name: "Home", href: route("home") },
+                                { name: "About", href: "/about" },
+                                { name: "Pricing", href: "/pricing" },
+                                { name: "Contact", href: "/contact" },
+                            ].map((link) => (
+                                <Link
+                                    key={link.name}
+                                    href={link.href}
+                                    className="
+                              relative text-[var(--color-text-primary)] 
+                               hover:text-[var(--color-primary)] transition-colors duration-300
+                               after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] 
+                             after:bg-[var(--color-primary)] after:transition-all   after:duration-300 
+                             hover:after:w-full"
+                                >
+                                    {link.name}
+                                </Link>
+                            ))}
                         </nav>
 
                         {/* the hamburger menu for mobile  */}

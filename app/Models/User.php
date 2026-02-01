@@ -17,6 +17,11 @@ class User extends Authenticatable
     protected $primaryKey = 'user_id';
     public $incrementing = true;
     protected $keyType = 'int';
+    // app/Models/User.php
+    protected $casts = [
+        'preferences' => 'array',
+    ];
+
 
     protected $fillable = [
         'bank_id',
@@ -80,5 +85,10 @@ class User extends Authenticatable
     public function kyc()
     {
         return $this->hasOne(UserKyc::class, 'user_id', 'user_id');
+    }
+
+    public function hasBank()
+    {
+        return !is_null($this->bank_id);
     }
 }

@@ -91,9 +91,9 @@ export default function Admindashboard() {
                 {/* Stats / Actions */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Total Branches */}
-                    <div className="card">
+                    <div className="card border-l-4 border-[var(--color-success)]">
                         <p className="text-muted">Total Branches</p>
-                        <h3 className="mt-2 font-extrabold text-[1.8rem]">
+                        <h3 className="mt-2 font-extrabold text-[1.8rem] success">
                             {branches.length}
                         </h3>
                     </div>

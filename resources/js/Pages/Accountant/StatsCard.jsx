@@ -32,7 +32,7 @@ export default function StatCard({
 
   return (
     <div
-      className="card flex flex-col gap-2"
+      className="card flex flex-col gap-2 border-l-4 border-[var(--color-primary)]"
       style={{ backgroundColor: variants[variant].bg }}
     >
       {/* Title */}

@@ -37,24 +37,6 @@ class TransactionController extends Controller
         return Inertia::render("Accountant/MakeTransaction");
     }
 
-    // Only authenticated users
-    // public function __construct()
-    // {
-    //     $this->middleware('auth');
-    // }
-
-    // // Show transaction form
-    // public function create()
-    // {
-    //     // Only agents can select users under their zone
-    //     $users = [];
-    //     if (Auth::user()->role->role_name === 'agent') {
-    //         $users = Auth::user()->zones()->with('users')->get()->pluck('users')->flatten();
-    //     }
-
-    //     return view('transactions.create', compact('users'));
-    // }
-
     // Store a new transaction
     public function store(Request $request)
     {

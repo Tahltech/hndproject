@@ -57,10 +57,19 @@ export const navigationByRole = {
         { label: "Settings", href: route("settings"), icon: "settings" },
     ],
     loan_officer: [
-        { label: "Dashboard", href: route("loanadmindashboard"), icon: "dashboard"},
-        {label: "Branch Users",  href: route("availableusers"), icon: "users"},
-        {label: "Loan Requests",  href: route("showrequests"), icon: "bell"},
+        {
+            label: "Dashboard",
+            href: route("loanadmindashboard"),
+            icon: "dashboard",
+        },
+        { label: "Branch Users", href: route("availableusers"), icon: "users" },
+        { label: "Loan Requests", href: route("showrequests"), icon: "bell" },
          {
+            label: "Loan Repayment",
+            href: route("loan.repayments"),
+            icon: "bell",
+        },
+        {
             label: "Pending Users",
             href: route("bank.users.pending"),
             icon: "users",
@@ -69,13 +78,40 @@ export const navigationByRole = {
     ],
 
     accountant: [
-        {label: "Dashboard", href: route("accountadmindashboard"), icon: "dashboard"},
-        {label: "Branch Users",  href: route("availableusers"), icon: "users"},
-        {label: "Loan Repayment", href: route("loan.repayments"), icon: "bell"},
-    {label: "Transactions", href: route("accountant.transactions"),icon: "bell"},
-      {label: "Make Transactions", href: route("transactions.create"),icon: "transaction"},
-    
-         { label: "Settings", href: route("settings"), icon: "settings" },
-         
+        {
+            label: "Dashboard",
+            href: route("accountadmindashboard"),
+            icon: "dashboard",
+        },
+        { label: "Branch Users", href: route("availableusers"), icon: "users" },
+        {
+            label: "Loan Repayment",
+            href: route("loan.repayments"),
+            icon: "bell",
+        },
+        {
+            label: "Transactions",
+            href: route("accountant.transactions"),
+            icon: "bell",
+        },
+        {
+            label: "Make Transactions",
+            href: route("transactions.create"),
+            icon: "transaction",
+        },
+
+        { label: "Settings", href: route("settings"), icon: "settings" },
+    ],
+    agent: [
+        {
+            label: "Dashboard",
+            href: route("agentadmindashboard"),
+            icon: "dashboard",
+        },
+        { label: "Branch Users", href: route("availableusers"), icon: "users" },
+       
+        
+
+        { label: "Settings", href: route("settings"), icon: "settings" },
     ],
 };

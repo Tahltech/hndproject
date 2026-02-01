@@ -20,6 +20,7 @@ use App\Http\Controllers\{
     UserKycController
 };
 use App\Http\Controllers\BankAdmin\BankProfileController;
+use Phiki\Grammar\Injections\Prefix;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,10 @@ use App\Http\Controllers\BankAdmin\BankProfileController;
 
 Route::get('/', [BankController::class, "availableBanks"])->name('home');
 Route::get('/branches/{id}', [BranchController::class, "availableBranches"])->name("branches");
+Route::get('/about', fn() => Inertia::render('Info/about'));
+Route::get('/pricing', fn() => Inertia::render('Info/Pricing'));
+Route::get('/contact', fn() => Inertia::render('Info/Contact'));
+
 
 // login / signup
 Route::get('/login', fn() => Inertia::render('Login'))->name('login');
@@ -132,7 +137,7 @@ Route::middleware(['auth'])->prefix('bnkadmindashboard')->group(function () {
     Route::patch('/profile/contact', [BankProfileController::class, 'updateContact'])->name("bank.profile.contact");
     Route::patch('/profile/settings', [BankProfileController::class, 'updateSettings']);
 
-     Route::delete('/delete/admin/{user}', [BranchController::class, 'destroyAdmin'])->name("branch.delete");
+    Route::delete('/delete/admin/{user}', [BranchController::class, 'destroyAdmin'])->name("branch.delete");
 });
 
 
@@ -240,14 +245,21 @@ Route::middleware("auth")->group(
 | AGENT ROUTES
 |--------------------------------------------------------------------------
 */
-Route::get('/agent/clients', [AgentController::class, 'agentclients']);
-Route::post('/assign/userzone', [AgentController::class, 'alterusers'])
-    ->name("alterZone");
+Route::middleware('auth')->prefix("agentadmindashboard")->group(
 
-Route::post("/remove/userszone", [AgentController::class, 'removeuserzone'])
-    ->name("removeZone");
+    function () {
 
 
+        Route::get('/agent/clients', [AgentController::class, 'agentclients']);
+        Route::post('/assign/userzone', [AgentController::class, 'alterusers'])
+            ->name("alterZone");
+
+        Route::post("/remove/userszone", [AgentController::class, 'removeuserzone'])
+            ->name("removeZone");
+        Route::get('/', fn() => Inertia::render('Agent/Agentdashboard'))
+            ->name('agentadmindashboard');
+    }
+);
 /*
 |--------------------------------------------------------------------------
 | ACCOUNTANT ROUTES
@@ -255,8 +267,10 @@ Route::post("/remove/userszone", [AgentController::class, 'removeuserzone'])
 */
 Route::middleware('auth')->prefix('accountantdmindashboard')->group(function () {
     Route::get('/',  [AccountantCOntroller::class, "getDashboard"])->name('accountadmindashboard');
+    Route::get('/dashbo',  fn()=>Inertia::render("Accountant/AccountantDashboard"))->name('accountadd');
     Route::get('/repayments', [AccountantController::class, 'repayments'])
         ->name('loan.repayments');
+
 
     Route::get(
         '/loans/{loan}/repayments',
@@ -278,14 +292,6 @@ Route::middleware('auth')->prefix('supportadmindashboard')->group(function () {
     Route::get('/', [AccountantCOntroller::class, "getDashboard"])->name('supportadmindashboard');
 });
 
-
-/*
-|--------------------------------------------------------------------------
-| AGENT DASHBOARD
-|--------------------------------------------------------------------------
-*/
-Route::get('agentadmindashboard', fn() => Inertia::render('Agent/Agentdashboard'))
-    ->name('agentadmindashboard');
 
 
 /*
@@ -319,6 +325,10 @@ Route::middleware(['auth', 'check_permission:view_dashboard_user'])
             ->name('kyc.submit');
         Route::get("/yourkyc", [UserKycController::class, "MyKyc"])->name("userkycpage");
         Route::resource('loan', LoanController::class);
+        Route::get('request/bank', [BankBranchController::class, "index"])->name('user.requestbank');
+        Route::post('request/bank', [BankBranchController::class, "Store"])->name('branch-requests.store');
+        // web.php
+        Route::post('/branch-requests/cancel/{user}', [BankBranchController::class, 'cancelRequest'])->name('branch-requests.cancel');
     });
 
 

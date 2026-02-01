@@ -35,8 +35,8 @@ export default function Transactions({ transactions }) {
                 />
 
                 {/* DESKTOP TABLE */}
-                <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full bg-white rounded shadow">
+                <div className="hidden md:block overflow-x-auto card">
+                    <table className="w-full  rounded shadow">
                         <thead className="bg-[var(--color-primary)] text-white">
                             <tr>
                                 <th className="px-4 py-2">Date</th>
@@ -49,11 +49,12 @@ export default function Transactions({ transactions }) {
                                 <th className="px-4 py-2">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody
+                        >
                             {data.map((tx) => (
                                 <tr
                                     key={tx.transaction_id}
-                                    className="border-b"
+                                     className="border-b hover:bg-[var(--color-primary-light)] transition"
                                 >
                                     <td className="px-4 py-2">
                                         {new Date(

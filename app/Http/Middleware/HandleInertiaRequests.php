@@ -52,6 +52,7 @@ public function share(Request $request): array
                     'name'  => $user->full_name,
                     'username'  => $user->username,
                     'email' => $user->email,
+                    'status'=>$user->status,
 
                     // IMPORTANT: role comes from roles table
                     'role' => [

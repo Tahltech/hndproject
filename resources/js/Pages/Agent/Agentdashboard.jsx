@@ -1,5 +1,5 @@
 import { route } from "ziggy-js";
-//import Layout from "../Layout/Layout";
+import AdminLayout from "../Layout/AdminLayout";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Select from "react-select";
@@ -157,4 +157,4 @@ export default function AgentDashboard() {
     );
 }
 
-//AgentDashboard.layout = (page) => <Layout>{page}</Layout>;
+AgentDashboard.layout = (page) => <AdminLayout>{page}</AdminLayout>;

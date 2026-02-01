@@ -16,6 +16,9 @@ export default function Userdashboard() {
     const [showPopup, setShowPopup] = useState(false);
     const [popupType, setPopupType] = useState("add");
 
+    const hasBank = !!user?.bank && user?.status === "active";
+
+
     useEffect(() => {
         axios
             .get("/mydashboard/account/ballance")
@@ -26,7 +29,6 @@ export default function Userdashboard() {
             .catch(console.error);
     }, []);
 
-    // Only last 5 transactions
     const lastFiveTransactions = transactions.slice(0, 5);
 
     return (
@@ -100,6 +102,7 @@ export default function Userdashboard() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                         <button
+                            disabled={!hasBank}
                             onClick={() => {
                                 setPopupType("add");
                                 setShowPopup(true);
@@ -111,6 +114,7 @@ export default function Userdashboard() {
                         </button>
 
                         <button
+                            disabled={!hasBank}
                             onClick={() => {
                                 setPopupType("withdraw");
                                 setShowPopup(true);

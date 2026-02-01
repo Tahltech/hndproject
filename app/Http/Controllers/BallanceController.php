@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Log;
 use App\Models\Account;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Services\PHPMailerService;
 use Illuminate\Support\Facades\DB;
@@ -19,9 +20,28 @@ class BallanceController extends Controller
      */
     public function getBalance()
     {
-        // get the logged-in user
+
         $user = Auth::user();
         $account = Account::where('user_id', $user->user_id)->first();
+
+        if (!$account) {
+            return response()->json([
+                'balance' => 0,
+                'transactions' => [],
+                'latestTransaction' => null,
+            ]);
+        }
+
+        // now it's safe to access $account->account_id
+        $transactions = Transaction::where('account_id', $account->account_id)->latest()->take(5)->get();
+        $latestTransaction = $user->account?->transactions()->latest()->first();
+
+        return response()->json([
+            'balance' => $account->balance,
+            'transactions' => $transactions,
+            'latestTransaction' => $latestTransaction,
+        ]);
+
         $transactions = Transaction::where('account_id', $account->account_id)->latest()->take(5)->get();
 
         $latestTransaction = $user->account?->transactions()->latest()->first();
@@ -37,7 +57,7 @@ class BallanceController extends Controller
         ]);
     }
 
-    public function addballance(Request $request, RabbitMaidService $rabbitMaid)
+    public function addballance(Request $request, RabbitMaidService $rabbitMaid, PHPMailerService $mailer)
     {
         $data = $request->validate([
             'method'       => 'required',
@@ -45,12 +65,16 @@ class BallanceController extends Controller
             'amount'       => 'required|numeric|min:50',
             'type'         => 'required|in:credit,debit',
         ]);
-
-        //dd($data['type']);
-
+        $user = Auth::user();
+        /** @var \App\Models\User $user */
+        if (!$user || !$user->hasBank()) {
+            return redirect()->back()->with(
+                'error',
+                'You must be assigned to a bank to perform this action'
+            );
+        }
         $userId = Auth::user()->user_id;
         $amount = $data['amount'];
-
         // Payment method
         if ($data['method'] === 'MobileMoney') {
             $service = 'mtn';
@@ -62,64 +86,87 @@ class BallanceController extends Controller
             return back()->with('error', 'Invalid payment method');
         }
 
-        // Call API
 
-        //dd($service, $amount);
-        $response = $rabbitMaid->transact($service, $data['type'], $amount);
+        try {
+            $response = $rabbitMaid->transact($service, $data['type'], $amount);
 
-        if (!$response->successful()) {
-            return back()->with('error', 'Transaction failed');
-        }
+            if (!$response->successful()) {
+                return back()->with('error', 'Transaction failed');
+            }
+            $reference = $response->json()['reference'] ?? 'N/A';
+            $account = Account::where('user_id', $userId)->first();
 
-        $reference = $response->json()['reference'] ?? 'N/A';
-        $account = Account::where('user_id', $userId)->first();
+            //deposit
+            if ($data['type'] === 'credit') {
 
-        //deposit
-        if ($data['type'] === 'credit') {
+                if (!$account) {
+                    $account = Account::create([
+                        'user_id' => $userId,
+                        'balance' => 0,
+                    ]);
+                }
 
-            if (!$account) {
-                $account = Account::create([
-                    'user_id' => $userId,
-                    'balance' => 0,
-                ]);
+                $account->balance += $amount;
+                $account->save();
+
+                $method = 'deposit';
             }
 
-            $account->balance += $amount;
-            $account->save();
 
-            $method = 'deposit';
-        }
+            //WITHDRAW
+            else {
 
+                if (!$account) {
+                    return back()->with('error', 'No account found');
+                }
 
-        //WITHDRAW
-        else {
+                if ($account->balance < $amount) {
+                    return back()->with('error', 'Insufficient balance');
+                }
 
-            if (!$account) {
-                return back()->with('error', 'No account found');
+                $account->balance -= $amount;
+                $account->save();
+
+                $method = 'withdrawal';
             }
 
-            if ($account->balance < $amount) {
-                return back()->with('error', 'Insufficient balance');
-            }
+            // Save transaction
+            Transaction::create([
+                'account_id'   => $account->account_id,
+                'agent_id'     => $userId,
+                'type'         => $method,
+                'method'       => $methodSaved,
+                'amount'       => $amount,
+                'status'       => 'success',
+                'reference_no' => $reference,
+                'remarks'      => 'Done VIA RabbitMaid API',
+            ]);
+            $user = Auth::user();
 
-            $account->balance -= $amount;
-            $account->save();
+            $emailBody = view('emails.transactions', [
+                'user' => $user,
+            ])->render();
 
-            $method = 'withdrawal';
+            $mailer->sendEmail(
+                $user->email,
+                'Transaction with' . $user->bank->name,
+                $emailBody
+            );
+
+            return back()->with('success', ucfirst($method) . " successful! Ref: $reference");
+        } catch (\Throwable $e) {
+
+            Log::error('User creation failed', [
+                'error_message' => $e->getMessage(),
+                'file'          => $e->getFile(),
+                'line'          => $e->getLine(),
+                'request_data'  => $request->except(['password', 'password_confirmation']),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Something went wrong. Please try again later.');
         }
-
-        // Save transaction
-        Transaction::create([
-            'account_id'   => $account->account_id,
-            'agent_id'     => $userId,
-            'type'         => $method,
-            'method'       => $methodSaved,
-            'amount'       => $amount,
-            'status'       => 'success',
-            'reference_no' => $reference,
-            'remarks'      => 'Done VIA RabbitMaid API',
-        ]);
-
-        return back()->with('success', ucfirst($method) . " successful! Ref: $reference");
     }
 }

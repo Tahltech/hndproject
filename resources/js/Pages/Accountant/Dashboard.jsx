@@ -83,6 +83,14 @@ export default function AccountantDashboard({ stats }) {
                         </span>
                     </Link>
                 </div>
+                 <div>
+                <h1 className="text-2xl font-extrabold text-[var(--color-primary)]">
+                    Accountant Dashboard
+                </h1>
+                <p className="text-sm text-[var(--color-text-secondary)]">
+                    Financial overview & repayment monitoring
+                </p>
+            </div>
 
                 {/* TOP KPIs */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -223,6 +231,13 @@ export default function AccountantDashboard({ stats }) {
                     >
                         View All Transactions
                     </Link>
+                    <Link
+                        href={route("accountadd")}
+                        className="btn btn-primary px-6 py-2 rounded"
+                    >
+                        another one
+                    </Link>
+                    
                 </div>
             </main>
         </>

@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
-import { useForm , usePage} from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 import { route } from "ziggy-js";
 import Toast from "../../Components/Toast";
 import { ToastProvider } from "../../Components/ToastContext";
 import Icon from "../../Components/Icons";
 
 export default function AppLayout({ children }) {
-     const { props } = usePage();
-      const user = props.auth?.user;
+    const { authUser } = usePage().props;
+
+    const isDark = authUser?.preferences?.darkMode;
+
+    const { props } = usePage();
+    const user = props.auth?.user;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { post } = useForm();
 
@@ -18,12 +22,20 @@ export default function AppLayout({ children }) {
 
     const navItems = [
         { name: "Dashboard", href: route("userdashboard"), icon: "dashboard" },
-        { name: "Transactions", href: route("getransaction"), icon: "transaction" },
-        { name: "Loan Services", href: route("userloanservices"), icon: "loan" },
-        {name:"Loan Repayment", href: route("loanrepayment"), icon:"loan"},
-        {name: "My Kyc", href: route("userkycpage") , icon: "files"},
+        {
+            name: "Transactions",
+            href: route("getransaction"),
+            icon: "transaction",
+        },
+        {
+            name: "Loan Services",
+            href: route("userloanservices"),
+            icon: "loan",
+        },
+        { name: "Loan Repayment", href: route("loanrepayment"), icon: "loan" },
+        { name:"Join bank", href:route("user.requestbank"), icon: "bank"},
+        { name: "My Kyc", href: route("userkycpage"), icon: "files" },
         { name: "Settings", href: "/settings", icon: "settings" },
-        
     ];
 
     const NavItem = ({ href, icon, name, onClick }) => (
@@ -40,7 +52,6 @@ export default function AppLayout({ children }) {
     return (
         <ToastProvider>
             <div className="min-h-screen flex bg-[var(--color-background)] text-[var(--color-text-primary)]">
-               
                 <aside className="hidden md:flex md:flex-col w-64 fixed inset-y-0 left-0 bg-[var(--color-surface)] border-r border-[var(--color-border)]">
                     {/* BRAND */}
                     <div className="app-brand flex items-center gap-3 px-6 py-5 border-b border-[var(--color-border)]">
@@ -75,7 +86,6 @@ export default function AppLayout({ children }) {
                     </nav>
                 </aside>
 
-               
                 <div className="md:hidden fixed top-0 left-0 right-0 z-20 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
                     <header className="flex justify-between items-center px-4 py-3">
                         {/* LOGO */}
@@ -157,7 +167,7 @@ export default function AppLayout({ children }) {
                 </div>
 
                 {/* ================= MAIN CONTENT ================= */}
-                <main className="flex-1 md:ml-64 px-6 py-6 mt-14 md:mt-0 overflow-y-auto">
+                <main className={`${isDark ? "theme-dark" : "theme-light"} flex-1 md:ml-64 px-6 py-6 mt-14 md:mt-0 overflow-y-auto` }>
                     {children}
                 </main>
             </div>

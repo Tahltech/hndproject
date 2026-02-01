@@ -56,7 +56,7 @@ export default function LoanAdminDashboard({ loanStats, monthlyStats }) {
             {/* Loan Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
                 {/* Total Loan Amount */}
-                <div className="card flex flex-col items-center p-6">
+                <div className="card flex flex-col items-center p-6 border-l-4 border-[var(--color-primary)]">
                     <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                         Total Loan Amount
                     </span>
@@ -66,7 +66,7 @@ export default function LoanAdminDashboard({ loanStats, monthlyStats }) {
                 </div>
 
                 {/* Pending Loans */}
-                <div className="card flex flex-col items-center p-6 bg-[var(--color-warning-light)] text-[var(--color-warning)]">
+                <div className="card flex flex-col items-center p-6 bg-[var(--color-warning-light)] text-[var(--color-warning)] border-l-4 border-[var(--color-warning)]">
                     <span className="text-sm font-medium">Pending Loans</span>
                     <span className="text-2xl font-bold mt-2">
                         {loanStats.pending || 0}
@@ -74,7 +74,7 @@ export default function LoanAdminDashboard({ loanStats, monthlyStats }) {
                 </div>
 
                 {/* Approved Loans */}
-                <div className="card flex flex-col items-center p-6 bg-[var(--color-success-light)] text-[var(--color-success)]">
+                <div className="card flex flex-col items-center p-6 bg-[var(--color-success-light)] text-[var(--color-success)] border-l-4 border-[var(--color-success)]">
                     <span className="text-sm font-medium">Approved Loans</span>
                     <span className="text-2xl font-bold mt-2">
                         {loanStats.approved || 0}
@@ -83,7 +83,7 @@ export default function LoanAdminDashboard({ loanStats, monthlyStats }) {
             </div>
 
             {/* Total Approved Amount */}
-            <div className="card flex flex-col items-center p-6 bg-[var(--color-success-light)] text-[var(--color-success)]">
+            <div className="card flex flex-col items-center p-6 bg-[var(--color-success-light)] text-[var(--color-success)] border border-[var(--color-success)]">
                 <span className="text-sm font-medium">
                     Total Loan Amount Approved
                 </span>
