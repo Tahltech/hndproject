@@ -81,10 +81,9 @@ export default function BranchAdminDashboard() {
             <Head title="Branch Admin Dashboard" />
 
             <main className="page space-y-8">
-                {/* ===== Top Right Bar ===== */}
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    {/* Left: Welcome */}
+                    
                     <div className=" flex items-center gap-4">
                         <div>
                             <p className="text-sm text-[var(--color-text-muted)]">
@@ -102,12 +101,11 @@ export default function BranchAdminDashboard() {
                         <div className="flex items-center gap-3 cursor-pointer group">
                             <div
                                 className="
-                    w-10 h-10 rounded-full overflow-hidden
-                    bg-[var(--color-primary-light)]
-                    flex items-center justify-center
-                    group-hover:ring-2 group-hover:ring-[var(--color-primary)]
-                    transition
-                "
+                       w-10 h-10 rounded-full overflow-hidden
+                       bg-[var(--color-primary-light)]
+                         flex items-center justify-center
+                         group-hover:ring-2 group-hover:ring-[var(--color-primary)]
+                        transition"
                             >
                                 <img
                                     src={
@@ -128,7 +126,7 @@ export default function BranchAdminDashboard() {
                                     Branch Admin
                                 </p>
                             </div>
-                        </div>
+                        </div>  
 
                         {/* Action Button */}
                         <Link

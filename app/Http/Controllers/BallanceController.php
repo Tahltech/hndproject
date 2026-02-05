@@ -32,16 +32,6 @@ class BallanceController extends Controller
             ]);
         }
 
-        // now it's safe to access $account->account_id
-        $transactions = Transaction::where('account_id', $account->account_id)->latest()->take(5)->get();
-        $latestTransaction = $user->account?->transactions()->latest()->first();
-
-        return response()->json([
-            'balance' => $account->balance,
-            'transactions' => $transactions,
-            'latestTransaction' => $latestTransaction,
-        ]);
-
         $transactions = Transaction::where('account_id', $account->account_id)->latest()->take(5)->get();
 
         $latestTransaction = $user->account?->transactions()->latest()->first();
@@ -131,7 +121,7 @@ class BallanceController extends Controller
             }
 
             // Save transaction
-            Transaction::create([
+         $transaction=   Transaction::create([
                 'account_id'   => $account->account_id,
                 'agent_id'     => $userId,
                 'type'         => $method,
@@ -145,6 +135,7 @@ class BallanceController extends Controller
 
             $emailBody = view('emails.transactions', [
                 'user' => $user,
+                'transaction'=>$transaction,
             ])->render();
 
             $mailer->sendEmail(

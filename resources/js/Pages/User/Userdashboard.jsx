@@ -18,7 +18,6 @@ export default function Userdashboard() {
 
     const hasBank = !!user?.bank && user?.status === "active";
 
-
     useEffect(() => {
         axios
             .get("/mydashboard/account/ballance")
@@ -82,7 +81,7 @@ export default function Userdashboard() {
                 </div>
 
                 {/* BALANCE CARD */}
-                <div className="card max-w-md mx-auto text-center">
+                <div className="card max-w-md mx-auto text-center border-[var(--color-primary)]">
                     <p className="text-sm text-muted">Main Balance</p>
 
                     <div className="flex justify-center items-center gap-3 mt-3">
@@ -92,11 +91,16 @@ export default function Userdashboard() {
                         </span>
 
                         <button
+                            type="button"
                             onClick={() => setShowBalance(!showBalance)}
-                            className="text-muted hover:opacity-80"
+                            className="text-muted hover:opacity-80 transition"
                             aria-label="Toggle balance visibility"
                         >
-                            <Icon name="eye" className="w-5 h-5" />
+                            {showBalance ? (
+                                <Icon name="eyeoff" className="w-5 h-5" />
+                            ) : (
+                                <Icon name="eye" className="w-5 h-5" />
+                            )}
                         </button>
                     </div>
 
@@ -177,14 +181,14 @@ export default function Userdashboard() {
                                                 <p className="text-muted text-xs">
                                                     {tx.method === "mtn_momo"
                                                         ? "MTN MOMO"
-                                                        : "Orange Money"}
+                                                        :tx.method === 'orange'? "Orange Money": "Cash"}
                                                 </p>
                                             </div>
                                         </div>
 
                                         <span
                                             className={`font-semibold ${
-                                                isDeposit ? "success" : "danger"
+                                                isDeposit ? "success" : "text-red-500"
                                             }`}
                                         >
                                             {isDeposit ? "+" : "-"}

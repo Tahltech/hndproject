@@ -14,7 +14,15 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            '@': '/resources/js'
-        }
-    }
+            '@': '/resources/js',
+        },
+    },
+    server: {
+        host: true,        
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: 'localhost', 
+        },
+    },
 });

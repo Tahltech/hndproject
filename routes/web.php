@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\{
     AccountantCOntroller,
     AgentController,
+    AgentManagementController,
     BallanceController,
     BankController,
     UserController,
@@ -33,6 +34,7 @@ Route::get('/branches/{id}', [BranchController::class, "availableBranches"])->na
 Route::get('/about', fn() => Inertia::render('Info/about'));
 Route::get('/pricing', fn() => Inertia::render('Info/Pricing'));
 Route::get('/contact', fn() => Inertia::render('Info/Contact'));
+Route::get('/privacy-policy', fn() => Inertia::render('Info/privacy'));
 
 
 // login / signup
@@ -246,10 +248,7 @@ Route::middleware("auth")->group(
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->prefix("agentadmindashboard")->group(
-
     function () {
-
-
         Route::get('/agent/clients', [AgentController::class, 'agentclients']);
         Route::post('/assign/userzone', [AgentController::class, 'alterusers'])
             ->name("alterZone");
@@ -258,6 +257,13 @@ Route::middleware('auth')->prefix("agentadmindashboard")->group(
             ->name("removeZone");
         Route::get('/', fn() => Inertia::render('Agent/Agentdashboard'))
             ->name('agentadmindashboard');
+        Route::post('/usersavings', [AgentController::class, 'Cashsavings'])
+            ->name("cashsavings");
+
+        Route::get('/agent/transactions', [AgentManagementController::class, 'getAgentUsersTransaction']);
+
+        Route::get('/agents/transactions', fn() => Inertia::render('Agent/UserTransactions'))
+            ->name('useragenttransaction');
     }
 );
 /*
@@ -267,17 +273,13 @@ Route::middleware('auth')->prefix("agentadmindashboard")->group(
 */
 Route::middleware('auth')->prefix('accountantdmindashboard')->group(function () {
     Route::get('/',  [AccountantCOntroller::class, "getDashboard"])->name('accountadmindashboard');
-    Route::get('/dashbo',  fn()=>Inertia::render("Accountant/AccountantDashboard"))->name('accountadd');
+    Route::get('/dashbo',  fn() => Inertia::render("Accountant/AccountantDashboard"))->name('accountadd');
     Route::get('/repayments', [AccountantController::class, 'repayments'])
         ->name('loan.repayments');
-
-
     Route::get(
         '/loans/{loan}/repayments',
         [AccountantController::class, 'repaymentHistory']
     )->name('repayments.history');
-
-
     Route::get('/transactions', [AccountantController::class, 'transactions'])
         ->name('accountant.transactions');
 });
@@ -302,7 +304,6 @@ Route::middleware('auth')->prefix('supportadmindashboard')->group(function () {
 Route::middleware(['auth', 'check_permission:view_dashboard_user'])
     ->prefix('mydashboard')
     ->group(function () {
-
         Route::get('/', fn() => Inertia::render('User/Userdashboard'))
             ->name('userdashboard');
 

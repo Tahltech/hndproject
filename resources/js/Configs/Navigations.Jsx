@@ -109,7 +109,9 @@ export const navigationByRole = {
             icon: "dashboard",
         },
         { label: "Branch Users", href: route("availableusers"), icon: "users" },
+         { label: "Zone Users", href: route("useragenttransaction"), icon: "users" },
        
+        
         
 
         { label: "Settings", href: route("settings"), icon: "settings" },

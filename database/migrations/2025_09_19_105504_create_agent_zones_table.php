@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('zone_id');
             $table->foreign('agent_id')->references('user_id')->on('users')->onDelete('cascade');
             $table->foreign('zone_id')->references('zone_id')->on('zones')->onDelete('cascade');
-            $table->unsignedBigInteger('branch_id')->after('zone_id');
+            $table->unsignedBigInteger('branch_id');
 
             $table->foreign('branch_id')->references('branch_id')->on('branches')->cascadeOnDelete()->cascadeOnUpdate();
 

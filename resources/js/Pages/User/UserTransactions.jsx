@@ -106,7 +106,7 @@ export default function UserTransactions() {
                                             <p className="text-muted text-xs">
                                                 {tx.method === "mtn_momo"
                                                     ? "MTN MOMO"
-                                                    : "Orange Money"}
+                                                    :tx.method === "orange"? "Orange Money": "Cash"}
                                             </p>
                                         </div>
                                     </div>

@@ -27,7 +27,7 @@ export default function UserKyc() {
       <Head title="KYC Verification" />
 
       <div className="max-w-4xl mx-auto py-10 page">
-        <div className="bg-[var(--color-primary-light)] shadow-xl rounded-2xl p-8">
+        <div className="bg-[var(--color-primary-light)] shadow-xl rounded-2xl p-8 card">
           <h1 className="text-[var(--color-primary)] text-2xl font-bold mb-2">
             KYC Verification
           </h1>

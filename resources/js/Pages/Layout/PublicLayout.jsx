@@ -192,7 +192,7 @@ export default function PublicLayout({ children }) {
                                 </li>
                                 <li>
                                     <Link
-                                        href="/privacy"
+                                        href="/privacy-policy"
                                         className="hover:underline"
                                     >
                                         Privacy

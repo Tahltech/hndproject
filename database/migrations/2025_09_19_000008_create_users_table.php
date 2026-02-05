@@ -28,7 +28,7 @@ return new class extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('bank_id')->nullable();
             $table->foreign('bank_id')->references('bank_id')->on('banks')->onDelete('cascade');
-            $table->foreign('zone_id')->references('zone_d')->on('zones')->onDelete('cascade');
+            $table->foreign('zone_id')->references('zone_id')->on('zones')->onDelete('cascade');
             $table->foreign('branch_id')->references('branch_id')->on('branches')->onDelete('set null');
             $table->foreign('role_id')->references('role_id')->on('roles')->onDelete('cascade');
         });

@@ -18,7 +18,7 @@ export default function BalanceForm({ type }) {
     return (
         <form
             onSubmit={submit}
-            className="bg-[var(--color-surface)] p-6 md:p-8 rounded-2xl shadow-md max-w-md mx-auto mt-14 flex flex-col gap-5"
+            className="card p-6 md:p-8 rounded-2xl shadow-md max-w-md mx-auto mt-14 flex flex-col gap-5"
         >
             <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
                 {type === "credit" ? "Add Balance" : "Withdraw Balance"}
